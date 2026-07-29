@@ -3,6 +3,7 @@ from brain.evolution.evolution import EvolutionEngine
 from brain.evolution.evolution_context import EvolutionContext
 from brain.evolution.evolution_operation import EvolutionOperation
 from brain.evolution.evolution_plan import EvolutionPlan
+from brain.evolution.planning import EvolutionPlanner
 from brain.evolution.transition import KnowledgeTransition
 from brain.evolution.transition_type import TransitionType
 
@@ -13,6 +14,7 @@ __all__ = [
     "EvolutionEngine",
     "EvolutionOperation",
     "EvolutionPlan",
+    "EvolutionPlanner",
     "KnowledgeTransition",
     "TransitionType",
 ]

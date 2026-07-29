@@ -1,14 +1,18 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from brain.application.usecases.models import EvolutionRequest, EvolutionSummary
-from brain.evolution.evolution import EvolutionEngine
+from brain.application.usecases.models import (
+    EvolutionRequest,
+    EvolutionSummary,
+    PlanningMetrics,
+)
 from brain.evolution.evolution_context import EvolutionContext
+from brain.evolution.planning import EvolutionPlanner
 
 
 @dataclass(frozen=True)
 class EvolutionUseCase:
-    engine: EvolutionEngine
+    planner: EvolutionPlanner
 
     def execute(
         self,
@@ -20,7 +24,7 @@ class EvolutionUseCase:
         if context is None:
             context = EvolutionContext()
 
-        plan = self.engine.plan(
+        plan = self.planner.plan(
             targets=request.targets,
             category=request.context,
             context=context,
@@ -38,7 +42,9 @@ class EvolutionUseCase:
             evolution_completed=True,
             evolution_success=True,
             evolution_duration=end - start,
-            planned_operations_count=len(plan.operations),
-            affected_targets_count=len(plan.affected_targets),
-            quarantined_skipped=quarantined,
+            planning=PlanningMetrics(
+                planned_operations_count=len(plan.operations),
+                affected_targets_count=len(plan.affected_targets),
+                quarantined_skipped=quarantined,
+            ),
         )

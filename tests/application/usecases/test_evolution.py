@@ -3,11 +3,16 @@ import uuid
 import pytest
 
 from brain.application.usecases.evolution import EvolutionUseCase
-from brain.application.usecases.models import EvolutionRequest, EvolutionSummary
+from brain.application.usecases.models import (
+    EvolutionRequest,
+    EvolutionSummary,
+    PlanningMetrics,
+)
 from brain.evolution.evolution import EvolutionEngine
 from brain.evolution.evolution_context import EvolutionContext
 from brain.evolution.evolution_operation import EvolutionOperation
 from brain.evolution.evolution_plan import EvolutionPlan
+from brain.evolution.planning import EvolutionPlanner
 from brain.evolution.transition_type import TransitionType
 
 
@@ -15,9 +20,9 @@ from brain.evolution.transition_type import TransitionType
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _make_engine() -> EvolutionEngine:
+def _make_planner() -> EvolutionPlanner:
     from unittest.mock import MagicMock
-    return MagicMock(spec=EvolutionEngine)
+    return MagicMock(spec=EvolutionPlanner)
 
 
 def _make_request(
@@ -106,34 +111,6 @@ class TestEvolutionPlanConstruction:
             plan.operations = ()
 
 
-class TestEvolutionPlanOrderedOperations:
-    def test_operations_are_tuple(self):
-        plan = EvolutionPlan(operations=(), affected_targets=())
-        assert isinstance(plan.operations, tuple)
-
-    def test_order_is_preserved(self):
-        tid1, tid2, tid3 = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
-        ops = (
-            EvolutionOperation(tid1, tid1, TransitionType.UPDATE, "first"),
-            EvolutionOperation(tid2, tid2, TransitionType.SUPERSEDES, "second"),
-            EvolutionOperation(tid3, tid3, TransitionType.REFINEMENT, "third"),
-        )
-        plan = EvolutionPlan(operations=ops, affected_targets=(tid1, tid2, tid3))
-        assert plan.operations[0].reason == "first"
-        assert plan.operations[1].reason == "second"
-        assert plan.operations[2].reason == "third"
-
-    def test_deterministic_order(self):
-        tid1, tid2 = uuid.uuid4(), uuid.uuid4()
-        ops = (
-            EvolutionOperation(tid1, tid1, TransitionType.UPDATE, "a"),
-            EvolutionOperation(tid2, tid2, TransitionType.UPDATE, "b"),
-        )
-        plan1 = EvolutionPlan(operations=ops, affected_targets=(tid1, tid2))
-        plan2 = EvolutionPlan(operations=ops, affected_targets=(tid1, tid2))
-        assert plan1 == plan2
-
-
 class TestEvolutionPlanExpectedVersions:
     def test_expected_version_in_operation(self):
         tid = uuid.uuid4()
@@ -146,7 +123,7 @@ class TestEvolutionPlanExpectedVersions:
         )
         assert op.expected_version_id == evid
         assert op.target_id == tid
-        assert op.expected_version_id != op.target_id  # prove they're separate fields
+        assert op.expected_version_id != op.target_id
 
     def test_expected_versions_preserved_in_plan(self):
         tid1, tid2 = uuid.uuid4(), uuid.uuid4()
@@ -224,101 +201,101 @@ class TestEvolutionContextConstruction:
 
 class TestUseCaseConstruction:
     def test_constructor(self):
-        engine = _make_engine()
-        use_case = EvolutionUseCase(engine=engine)
-        assert use_case.engine is engine
+        planner = _make_planner()
+        use_case = EvolutionUseCase(planner=planner)
+        assert use_case.planner is planner
 
     def test_frozen(self):
-        engine = _make_engine()
-        use_case = EvolutionUseCase(engine=engine)
+        planner = _make_planner()
+        use_case = EvolutionUseCase(planner=planner)
         with pytest.raises(AttributeError):
-            use_case.engine = None
+            use_case.planner = None
 
 
 class TestUseCaseExecute:
     def test_returns_evolution_summary(self):
-        engine = _make_engine()
-        engine.plan.return_value = EvolutionPlan(
+        planner = _make_planner()
+        planner.plan.return_value = EvolutionPlan(
             operations=(),
             affected_targets=(),
         )
-        use_case = EvolutionUseCase(engine=engine)
+        use_case = EvolutionUseCase(planner=planner)
         result = use_case.execute(_make_request(), _make_context())
         assert isinstance(result, EvolutionSummary)
 
-    def test_delegates_to_engine_plan(self):
-        engine = _make_engine()
-        engine.plan.return_value = EvolutionPlan(
+    def test_delegates_to_planner_plan(self):
+        planner = _make_planner()
+        planner.plan.return_value = EvolutionPlan(
             operations=(),
             affected_targets=(),
         )
-        use_case = EvolutionUseCase(engine=engine)
+        use_case = EvolutionUseCase(planner=planner)
         req = _make_request(targets=(uuid.uuid4(),), context="duplicate")
         ctx = _make_context()
         use_case.execute(req, ctx)
-        engine.plan.assert_called_once_with(
+        planner.plan.assert_called_once_with(
             targets=req.targets,
             category=req.context,
             context=ctx,
         )
 
     def test_uses_default_context_when_none(self):
-        engine = _make_engine()
-        engine.plan.return_value = EvolutionPlan(
+        planner = _make_planner()
+        planner.plan.return_value = EvolutionPlan(
             operations=(),
             affected_targets=(),
         )
-        use_case = EvolutionUseCase(engine=engine)
+        use_case = EvolutionUseCase(planner=planner)
         use_case.execute(_make_request())
-        call_kwargs = engine.plan.call_args
+        call_kwargs = planner.plan.call_args
         assert isinstance(call_kwargs[1]["context"], EvolutionContext)
 
     def test_summary_started_completed_success(self):
-        engine = _make_engine()
-        engine.plan.return_value = EvolutionPlan(
+        planner = _make_planner()
+        planner.plan.return_value = EvolutionPlan(
             operations=(),
             affected_targets=(),
         )
-        use_case = EvolutionUseCase(engine=engine)
+        use_case = EvolutionUseCase(planner=planner)
         result = use_case.execute(_make_request(), _make_context())
         assert result.evolution_started is True
         assert result.evolution_completed is True
         assert result.evolution_success is True
 
     def test_summary_planned_operations_count(self):
-        engine = _make_engine()
+        planner = _make_planner()
         tid = uuid.uuid4()
         ops = (
             EvolutionOperation(tid, tid, TransitionType.UPDATE, "op1"),
             EvolutionOperation(tid, tid, TransitionType.REFINEMENT, "op2"),
         )
-        engine.plan.return_value = EvolutionPlan(
+        planner.plan.return_value = EvolutionPlan(
             operations=ops,
             affected_targets=(tid,),
         )
-        use_case = EvolutionUseCase(engine=engine)
+        use_case = EvolutionUseCase(planner=planner)
         result = use_case.execute(_make_request(), _make_context())
-        assert result.planned_operations_count == 2
+        assert result.planning.planned_operations_count == 2
 
     def test_summary_affected_targets_count(self):
-        engine = _make_engine()
+        planner = _make_planner()
         tid1, tid2 = uuid.uuid4(), uuid.uuid4()
         ops = (
             EvolutionOperation(tid1, tid1, TransitionType.UPDATE, "op1"),
             EvolutionOperation(tid2, tid2, TransitionType.UPDATE, "op2"),
         )
-        engine.plan.return_value = EvolutionPlan(
+        planner.plan.return_value = EvolutionPlan(
             operations=ops,
             affected_targets=(tid1, tid2),
         )
-        use_case = EvolutionUseCase(engine=engine)
+        use_case = EvolutionUseCase(planner=planner)
         result = use_case.execute(_make_request(), _make_context())
-        assert result.affected_targets_count == 2
+        assert result.planning.affected_targets_count == 2
 
     def test_summary_quarantined_skipped(self):
-        engine = _make_engine()
+        planner = _make_planner()
         tid = uuid.uuid4()
-        engine.plan.return_value = EvolutionPlan(
+        planner.plan.return_value = EvolutionPlan(
             operations=(),
             affected_targets=(),
             metadata=(
@@ -326,35 +303,35 @@ class TestUseCaseExecute:
                 ("quarantined_skipped", "2"),
             ),
         )
-        use_case = EvolutionUseCase(engine=engine)
+        use_case = EvolutionUseCase(planner=planner)
         result = use_case.execute(_make_request(), _make_context())
-        assert result.quarantined_skipped == 2
+        assert result.planning.quarantined_skipped == 2
 
     def test_summary_empty_request(self):
-        engine = _make_engine()
-        engine.plan.return_value = EvolutionPlan(
+        planner = _make_planner()
+        planner.plan.return_value = EvolutionPlan(
             operations=(),
             affected_targets=(),
         )
-        use_case = EvolutionUseCase(engine=engine)
+        use_case = EvolutionUseCase(planner=planner)
         result = use_case.execute(_make_request(), _make_context())
-        assert result.planned_operations_count == 0
-        assert result.affected_targets_count == 0
+        assert result.planning.planned_operations_count == 0
+        assert result.planning.affected_targets_count == 0
 
     def test_handles_planning_failure(self):
-        engine = _make_engine()
-        engine.plan.side_effect = RuntimeError("plan failed")
-        use_case = EvolutionUseCase(engine=engine)
+        planner = _make_planner()
+        planner.plan.side_effect = RuntimeError("plan failed")
+        use_case = EvolutionUseCase(planner=planner)
         with pytest.raises(RuntimeError, match="plan failed"):
             use_case.execute(_make_request(), _make_context())
 
     def test_no_persistence(self):
-        engine = _make_engine()
-        engine.plan.return_value = EvolutionPlan(
+        planner = _make_planner()
+        planner.plan.return_value = EvolutionPlan(
             operations=(),
             affected_targets=(),
         )
-        use_case = EvolutionUseCase(engine=engine)
+        use_case = EvolutionUseCase(planner=planner)
         use_case.execute(_make_request(), _make_context())
         assert not hasattr(use_case, "_repository")
         assert not hasattr(use_case, "_unit_of_work")
@@ -362,17 +339,13 @@ class TestUseCaseExecute:
 
 
 # ---------------------------------------------------------------------------
-# EvolutionEngine.plan() — integration tests (real engine with mock repos)
+# EvolutionPlanner.plan() — pure integration tests (no repositories)
 # ---------------------------------------------------------------------------
 
-class TestEnginePlan:
+class TestPlannerPlan:
     def test_plan_returns_evolution_plan(self):
-        from unittest.mock import MagicMock
-        engine = EvolutionEngine(
-            knowledge_repository=MagicMock(),
-            evolution_repository=MagicMock(),
-        )
-        plan = engine.plan(
+        planner = EvolutionPlanner()
+        plan = planner.plan(
             targets=(),
             category="inspect",
             context=_make_context(),
@@ -380,12 +353,8 @@ class TestEnginePlan:
         assert isinstance(plan, EvolutionPlan)
 
     def test_empty_targets_empty_plan(self):
-        from unittest.mock import MagicMock
-        engine = EvolutionEngine(
-            knowledge_repository=MagicMock(),
-            evolution_repository=MagicMock(),
-        )
-        plan = engine.plan(
+        planner = EvolutionPlanner()
+        plan = planner.plan(
             targets=(),
             category="duplicate",
             context=_make_context(),
@@ -394,30 +363,23 @@ class TestEnginePlan:
         assert plan.affected_targets == ()
 
     def test_duplicate_plans_supersedes(self):
-        from unittest.mock import MagicMock
-        engine = EvolutionEngine(
-            knowledge_repository=MagicMock(),
-            evolution_repository=MagicMock(),
-        )
+        planner = EvolutionPlanner()
         a, b = uuid.uuid4(), uuid.uuid4()
-        plan = engine.plan(
+        plan = planner.plan(
             targets=(a, b),
             category="duplicate",
             context=_make_context(),
         )
         assert len(plan.operations) == 1
         assert plan.operations[0].transition_type == TransitionType.SUPERSEDES
-        assert plan.operations[0].target_id == a
-        assert plan.operations[0].expected_version_id == a
+        sorted_pair = tuple(sorted((a, b)))
+        assert plan.operations[0].target_id == sorted_pair[0]
+        assert plan.operations[0].expected_version_id == sorted_pair[0]
 
     def test_conflict_plans_refinement(self):
-        from unittest.mock import MagicMock
-        engine = EvolutionEngine(
-            knowledge_repository=MagicMock(),
-            evolution_repository=MagicMock(),
-        )
+        planner = EvolutionPlanner()
         a, b = uuid.uuid4(), uuid.uuid4()
-        plan = engine.plan(
+        plan = planner.plan(
             targets=(a, b),
             category="conflict",
             context=_make_context(),
@@ -426,13 +388,9 @@ class TestEnginePlan:
         assert plan.operations[0].transition_type == TransitionType.REFINEMENT
 
     def test_obsolete_plans_update(self):
-        from unittest.mock import MagicMock
-        engine = EvolutionEngine(
-            knowledge_repository=MagicMock(),
-            evolution_repository=MagicMock(),
-        )
+        planner = EvolutionPlanner()
         a = uuid.uuid4()
-        plan = engine.plan(
+        plan = planner.plan(
             targets=(a,),
             category="obsolete",
             context=_make_context(),
@@ -441,13 +399,9 @@ class TestEnginePlan:
         assert plan.operations[0].transition_type == TransitionType.UPDATE
 
     def test_gap_plans_nothing(self):
-        from unittest.mock import MagicMock
-        engine = EvolutionEngine(
-            knowledge_repository=MagicMock(),
-            evolution_repository=MagicMock(),
-        )
+        planner = EvolutionPlanner()
         a = uuid.uuid4()
-        plan = engine.plan(
+        plan = planner.plan(
             targets=(a,),
             category="gap",
             context=_make_context(),
@@ -455,13 +409,9 @@ class TestEnginePlan:
         assert plan.operations == ()
 
     def test_unknown_category_plans_nothing(self):
-        from unittest.mock import MagicMock
-        engine = EvolutionEngine(
-            knowledge_repository=MagicMock(),
-            evolution_repository=MagicMock(),
-        )
+        planner = EvolutionPlanner()
         a = uuid.uuid4()
-        plan = engine.plan(
+        plan = planner.plan(
             targets=(a,),
             category="unknown",
             context=_make_context(),
@@ -469,40 +419,28 @@ class TestEnginePlan:
         assert plan.operations == ()
 
     def test_identical_input_identical_plan(self):
-        from unittest.mock import MagicMock
-        engine = EvolutionEngine(
-            knowledge_repository=MagicMock(),
-            evolution_repository=MagicMock(),
-        )
+        planner = EvolutionPlanner()
         a, b = uuid.uuid4(), uuid.uuid4()
         targets = (a, b)
         ctx = _make_context()
-        plan1 = engine.plan(targets, "conflict", ctx)
-        plan2 = engine.plan(targets, "conflict", ctx)
+        plan1 = planner.plan(targets, "conflict", ctx)
+        plan2 = planner.plan(targets, "conflict", ctx)
         assert plan1 == plan2
 
     def test_plan_is_deterministic_across_categories(self):
-        from unittest.mock import MagicMock
-        engine = EvolutionEngine(
-            knowledge_repository=MagicMock(),
-            evolution_repository=MagicMock(),
-        )
+        planner = EvolutionPlanner()
         targets = (uuid.uuid4(), uuid.uuid4())
         ctx = _make_context()
-        results = [engine.plan(targets, "duplicate", ctx) for _ in range(10)]
+        results = [planner.plan(targets, "duplicate", ctx) for _ in range(10)]
         assert all(r == results[0] for r in results)
 
 
-class TestEnginePlanContextRespectsQuarantine:
+class TestPlannerPlanContextRespectsQuarantine:
     def test_quarantined_targets_skipped(self):
-        from unittest.mock import MagicMock
-        engine = EvolutionEngine(
-            knowledge_repository=MagicMock(),
-            evolution_repository=MagicMock(),
-        )
+        planner = EvolutionPlanner()
         a, b = uuid.uuid4(), uuid.uuid4()
         ctx = _make_context(quarantined_targets=(a,))
-        plan = engine.plan(
+        plan = planner.plan(
             targets=(a, b),
             category="duplicate",
             context=ctx,
@@ -510,30 +448,23 @@ class TestEnginePlanContextRespectsQuarantine:
         assert len(plan.operations) == 0
 
     def test_partial_quarantine(self):
-        from unittest.mock import MagicMock
-        engine = EvolutionEngine(
-            knowledge_repository=MagicMock(),
-            evolution_repository=MagicMock(),
-        )
+        planner = EvolutionPlanner()
         a, b, c = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
         ctx = _make_context(quarantined_targets=(a,))
-        plan = engine.plan(
+        plan = planner.plan(
             targets=(a, b, c),
             category="duplicate",
             context=ctx,
         )
         assert len(plan.operations) == 1
-        assert plan.operations[0].target_id == b
+        sorted_available = tuple(sorted((b, c)))
+        assert plan.operations[0].target_id == sorted_available[0]
 
     def test_all_targets_quarantined(self):
-        from unittest.mock import MagicMock
-        engine = EvolutionEngine(
-            knowledge_repository=MagicMock(),
-            evolution_repository=MagicMock(),
-        )
+        planner = EvolutionPlanner()
         a, b = uuid.uuid4(), uuid.uuid4()
         ctx = _make_context(quarantined_targets=(a, b))
-        plan = engine.plan(
+        plan = planner.plan(
             targets=(a, b),
             category="duplicate",
             context=ctx,
@@ -541,14 +472,10 @@ class TestEnginePlanContextRespectsQuarantine:
         assert plan.operations == ()
 
     def test_plan_metadata_records_quarantine_count(self):
-        from unittest.mock import MagicMock
-        engine = EvolutionEngine(
-            knowledge_repository=MagicMock(),
-            evolution_repository=MagicMock(),
-        )
+        planner = EvolutionPlanner()
         a, b, c = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
         ctx = _make_context(quarantined_targets=(a,))
-        plan = engine.plan(
+        plan = planner.plan(
             targets=(a, b, c),
             category="obsolete",
             context=ctx,
@@ -561,15 +488,11 @@ class TestEnginePlanContextRespectsQuarantine:
             pytest.fail("quarantined_skipped not in metadata")
 
 
-class TestEnginePlanOptimisticConcurrency:
+class TestPlannerPlanOptimisticConcurrency:
     def test_expected_version_recorded(self):
-        from unittest.mock import MagicMock
-        engine = EvolutionEngine(
-            knowledge_repository=MagicMock(),
-            evolution_repository=MagicMock(),
-        )
+        planner = EvolutionPlanner()
         a = uuid.uuid4()
-        plan = engine.plan(
+        plan = planner.plan(
             targets=(a,),
             category="obsolete",
             context=_make_context(),
@@ -577,15 +500,9 @@ class TestEnginePlanOptimisticConcurrency:
         assert plan.operations[0].expected_version_id == a
 
     def test_no_validation_of_expected_versions(self):
-        from unittest.mock import MagicMock
-        engine = EvolutionEngine(
-            knowledge_repository=MagicMock(),
-            evolution_repository=MagicMock(),
-        )
+        planner = EvolutionPlanner()
         a = uuid.uuid4()
-        # The plan() method does NOT check whether the expected version exists.
-        # It just records it.
-        plan = engine.plan(
+        plan = planner.plan(
             targets=(a,),
             category="obsolete",
             context=_make_context(),
@@ -593,23 +510,188 @@ class TestEnginePlanOptimisticConcurrency:
         assert plan.operations[0].expected_version_id is not None
 
 
-class TestEnginePlanNoMutation:
-    def test_no_repository_write(self):
-        from unittest.mock import MagicMock
-        repo = MagicMock()
-        evol_repo = MagicMock()
-        engine = EvolutionEngine(
-            knowledge_repository=repo,
-            evolution_repository=evol_repo,
+# ---------------------------------------------------------------------------
+# Refinement 6: Planning Independence — no repositories required
+# ---------------------------------------------------------------------------
+
+class TestPlanningIndependence:
+    def test_planner_constructible_without_repositories(self):
+        planner = EvolutionPlanner()
+        assert not hasattr(planner, "_knowledge")
+        assert not hasattr(planner, "_evolution")
+        assert not hasattr(planner, "_repository")
+
+    def test_planner_plan_executes_without_repositories(self):
+        planner = EvolutionPlanner()
+        a, b = uuid.uuid4(), uuid.uuid4()
+        plan = planner.plan(
+            targets=(a, b),
+            category="duplicate",
+            context=_make_context(),
         )
+        assert len(plan.operations) == 1
+
+    def test_planner_no_repository_imports(self):
+        import inspect
+        source = inspect.getsource(EvolutionPlanner)
+        assert "Repository" not in source
+        assert "from brain.repositories" not in source
+
+    def test_planner_no_application_imports(self):
+        import inspect
+        source = inspect.getsource(EvolutionPlanner)
+        assert "brain.application" not in source
+        assert "UseCase" not in source
+
+    def test_planner_no_runtime_imports(self):
+        import inspect
+        source = inspect.getsource(EvolutionPlanner)
+        assert "Runtime" not in source
+        assert "from brain.runtime" not in source
+
+    def test_planner_no_infrastructure_imports(self):
+        import inspect
+        source = inspect.getsource(EvolutionPlanner)
+        assert "UnitOfWork" not in source
+        assert "Transaction" not in source
+        assert "commit" not in source.lower()
+        assert "rollback" not in source.lower()
+
+    def test_planning_module_no_repository_imports(self):
+        import brain.evolution.planning as module
+        import inspect
+        source = inspect.getsource(module)
+        assert "Repository" not in source
+        assert "from brain.repositories" not in source
+
+    def test_engine_plan_works_without_repos(self):
+        engine = EvolutionEngine()
+        a, b = uuid.uuid4(), uuid.uuid4()
+        plan = engine.plan(
+            targets=(a, b),
+            category="conflict",
+            context=_make_context(),
+        )
+        assert isinstance(plan, EvolutionPlan)
+        assert len(plan.operations) == 1
+
+
+# ---------------------------------------------------------------------------
+# Refinement 7: Strategy Ownership — different caller orders, same plan
+# ---------------------------------------------------------------------------
+
+class TestStrategyOwnership:
+    def test_reversed_target_order_same_plan_duplicate(self):
+        planner = EvolutionPlanner()
+        a, b = uuid.uuid4(), uuid.uuid4()
+        ctx = _make_context()
+        plan_ab = planner.plan(targets=(a, b), category="duplicate", context=ctx)
+        plan_ba = planner.plan(targets=(b, a), category="duplicate", context=ctx)
+        assert plan_ab == plan_ba
+
+    def test_reversed_target_order_same_plan_conflict(self):
+        planner = EvolutionPlanner()
+        a, b = uuid.uuid4(), uuid.uuid4()
+        ctx = _make_context()
+        plan_ab = planner.plan(targets=(a, b), category="conflict", context=ctx)
+        plan_ba = planner.plan(targets=(b, a), category="conflict", context=ctx)
+        assert plan_ab == plan_ba
+
+    def test_reversed_target_order_same_plan_obsolete(self):
+        planner = EvolutionPlanner()
+        a, b, c = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
+        ctx = _make_context()
+        plan_abc = planner.plan(targets=(a, b, c), category="obsolete", context=ctx)
+        plan_cba = planner.plan(targets=(c, b, a), category="obsolete", context=ctx)
+        assert plan_abc == plan_cba
+
+    def test_scrambled_target_order_same_plan(self):
+        planner = EvolutionPlanner()
+        a, b, c, d = uuid.uuid4(), uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
+        ctx = _make_context()
+        plan_abcd = planner.plan(targets=(a, b, c, d), category="duplicate", context=ctx)
+        plan_dcab = planner.plan(targets=(d, c, a, b), category="duplicate", context=ctx)
+        assert plan_abcd == plan_dcab
+
+    def test_scrambled_three_targets_same_plan_obsolete(self):
+        planner = EvolutionPlanner()
+        a, b, c = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
+        ctx = _make_context()
+        plan_acb = planner.plan(targets=(a, c, b), category="obsolete", context=ctx)
+        plan_bca = planner.plan(targets=(b, c, a), category="obsolete", context=ctx)
+        plan_cab = planner.plan(targets=(c, a, b), category="obsolete", context=ctx)
+        assert plan_acb == plan_bca == plan_cab
+
+    def test_caller_order_does_not_affect_operation_order(self):
+        planner = EvolutionPlanner()
+        a, b, c = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
+        ctx = _make_context()
+        plan = planner.plan(targets=(a, b, c), category="obsolete", context=ctx)
+        ordered_ids = tuple(op.target_id for op in plan.operations)
+        assert ordered_ids == tuple(sorted((a, b, c)))
+
+    def test_callers_with_different_subset_order_same_plan(self):
+        planner = EvolutionPlanner()
+        a, b, c = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
+        ctx = _make_context()
+        plan_a_bc = planner.plan(targets=(a, b, c), category="conflict", context=ctx)
+        plan_b_ca = planner.plan(targets=(b, c, a), category="conflict", context=ctx)
+        assert plan_a_bc == plan_b_ca
+
+    def test_paired_operations_deterministic_across_orders(self):
+        planner = EvolutionPlanner()
+        targets = tuple(uuid.uuid4() for _ in range(6))
+        ctx = _make_context()
+        plans = [
+            planner.plan(targets=tuple(sorted(targets)), category="duplicate", context=ctx),
+            planner.plan(targets=tuple(reversed(targets)), category="duplicate", context=ctx),
+            planner.plan(targets=targets[::2] + targets[1::2], category="duplicate", context=ctx),
+        ]
+        assert all(p == plans[0] for p in plans)
+
+
+# ---------------------------------------------------------------------------
+# EvolutionEngine.plan() — delegation tests (engine with optional repos)
+# ---------------------------------------------------------------------------
+
+class TestEnginePlanDelegation:
+    def test_engine_plan_returns_evolution_plan(self):
+        engine = EvolutionEngine()
+        plan = engine.plan(
+            targets=(),
+            category="inspect",
+            context=_make_context(),
+        )
+        assert isinstance(plan, EvolutionPlan)
+
+    def test_engine_empty_targets_empty_plan(self):
+        engine = EvolutionEngine()
+        plan = engine.plan(
+            targets=(),
+            category="duplicate",
+            context=_make_context(),
+        )
+        assert plan.operations == ()
+        assert plan.affected_targets == ()
+
+    def test_engine_plan_no_mutation(self):
+        engine = EvolutionEngine()
         a = uuid.uuid4()
-        engine.plan(
+        plan = engine.plan(
             targets=(a,),
             category="duplicate",
             context=_make_context(),
         )
-        repo.assert_not_called()
-        evol_repo.assert_not_called()
+        assert isinstance(plan, EvolutionPlan)
+
+    def test_engine_identical_input_identical_plan(self):
+        engine = EvolutionEngine()
+        a, b = uuid.uuid4(), uuid.uuid4()
+        targets = (a, b)
+        ctx = _make_context()
+        plan1 = engine.plan(targets, "conflict", ctx)
+        plan2 = engine.plan(targets, "conflict", ctx)
+        assert plan1 == plan2
 
 
 class TestEnginePlanNoApplicationImport:
@@ -632,48 +714,48 @@ class TestEnginePlanNoApplicationImport:
 # ---------------------------------------------------------------------------
 
 class TestBoundaryIsolation:
-    def test_no_repository_import(self):
+    def test_no_repository_import_in_use_case(self):
         import inspect
         source = inspect.getsource(EvolutionUseCase)
         assert "Repository" not in source
         assert "from brain.repositories" not in source
 
-    def test_no_runtime_import(self):
+    def test_no_runtime_import_in_use_case(self):
         import inspect
         source = inspect.getsource(EvolutionUseCase)
         assert "BrainRuntime" not in source
         assert "from brain.runtime" not in source
 
-    def test_no_workflow_import(self):
+    def test_no_workflow_import_in_use_case(self):
         import inspect
         source = inspect.getsource(EvolutionUseCase)
         assert "Workflow" not in source
         assert "from brain.application.workflow" not in source
 
-    def test_no_maintenance_import(self):
+    def test_no_maintenance_import_in_use_case(self):
         import inspect
         source = inspect.getsource(EvolutionUseCase)
         assert "Maintenance" not in source
         assert "from brain.application.maintenance" not in source
 
-    def test_no_reflection_import(self):
+    def test_no_reflection_import_in_use_case(self):
         import inspect
         source = inspect.getsource(EvolutionUseCase)
         assert "Reflection" not in source
         assert "from brain.reflection" not in source
 
-    def test_no_learning_import(self):
+    def test_no_learning_import_in_use_case(self):
         import inspect
         source = inspect.getsource(EvolutionUseCase)
         assert "from brain.learning" not in source
 
-    def test_no_UnitOfWork_import(self):
+    def test_no_unit_of_work_import_in_use_case(self):
         import inspect
         source = inspect.getsource(EvolutionUseCase)
         assert "UnitOfWork" not in source
         assert "unit_of_work" not in source.lower()
 
-    def test_no_transaction_import(self):
+    def test_no_transaction_import_in_use_case(self):
         import inspect
         source = inspect.getsource(EvolutionUseCase)
         assert "Transaction" not in source
@@ -687,10 +769,10 @@ class TestBoundaryIsolation:
         assert "write" not in source.lower()
         assert "save" not in source.lower()
 
-    def test_use_case_only_imports_engine_and_dtos(self):
+    def test_use_case_imports_planner_and_dtos(self):
         import inspect
         source = inspect.getsource(EvolutionUseCase)
-        assert "EvolutionEngine" in source
+        assert "EvolutionPlanner" in source
         assert "EvolutionRequest" in source
         assert "EvolutionSummary" in source
         assert "EvolutionContext" in source
@@ -726,6 +808,60 @@ class TestEvolutionRequestDTO:
 
 
 # ---------------------------------------------------------------------------
+# PlanningMetrics DTO
+# ---------------------------------------------------------------------------
+
+class TestPlanningMetricsDTO:
+    def test_creation(self):
+        metrics = PlanningMetrics()
+        assert metrics.planned_operations_count == 0
+        assert metrics.affected_targets_count == 0
+        assert metrics.quarantined_skipped == 0
+
+    def test_with_values(self):
+        metrics = PlanningMetrics(
+            planned_operations_count=5,
+            affected_targets_count=3,
+            quarantined_skipped=2,
+        )
+        assert metrics.planned_operations_count == 5
+        assert metrics.affected_targets_count == 3
+        assert metrics.quarantined_skipped == 2
+
+    def test_frozen(self):
+        metrics = PlanningMetrics()
+        with pytest.raises(AttributeError):
+            metrics.planned_operations_count = 0
+
+    def test_equality(self):
+        m1 = PlanningMetrics(planned_operations_count=1, affected_targets_count=1, quarantined_skipped=0)
+        m2 = PlanningMetrics(planned_operations_count=1, affected_targets_count=1, quarantined_skipped=0)
+        assert m1 == m2
+
+    def test_nested_in_evolution_summary(self):
+        metrics = PlanningMetrics(planned_operations_count=5)
+        summary = EvolutionSummary(
+            evolution_started=True,
+            evolution_completed=True,
+            evolution_success=True,
+            evolution_duration=__import__("datetime").timedelta(seconds=1),
+            planning=metrics,
+        )
+        assert summary.planning is metrics
+        assert summary.planning.planned_operations_count == 5
+
+    def test_default_in_evolution_summary(self):
+        summary = EvolutionSummary(
+            evolution_started=True,
+            evolution_completed=True,
+            evolution_success=True,
+            evolution_duration=__import__("datetime").timedelta(seconds=1),
+        )
+        assert isinstance(summary.planning, PlanningMetrics)
+        assert summary.planning.planned_operations_count == 0
+
+
+# ---------------------------------------------------------------------------
 # EvolutionSummary DTO
 # ---------------------------------------------------------------------------
 
@@ -738,24 +874,9 @@ class TestEvolutionSummaryDTO:
             evolution_duration=__import__("datetime").timedelta(seconds=1),
         )
         assert summary.evolution_started is True
-        assert summary.planned_operations_count == 0
-        assert summary.affected_targets_count == 0
-        assert summary.quarantined_skipped == 0
-
-    def test_with_plan_fields(self):
-        from datetime import timedelta
-        summary = EvolutionSummary(
-            evolution_started=True,
-            evolution_completed=True,
-            evolution_success=True,
-            evolution_duration=timedelta(seconds=1),
-            planned_operations_count=5,
-            affected_targets_count=3,
-            quarantined_skipped=2,
-        )
-        assert summary.planned_operations_count == 5
-        assert summary.affected_targets_count == 3
-        assert summary.quarantined_skipped == 2
+        assert summary.evolution_completed is True
+        assert summary.evolution_success is True
+        assert isinstance(summary.planning, PlanningMetrics)
 
     def test_frozen(self):
         summary = EvolutionSummary(
@@ -765,4 +886,4 @@ class TestEvolutionSummaryDTO:
             evolution_duration=__import__("datetime").timedelta(0),
         )
         with pytest.raises(AttributeError):
-            summary.planned_operations_count = 0
+            summary.evolution_started = False

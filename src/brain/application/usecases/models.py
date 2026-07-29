@@ -106,11 +106,22 @@ class EvolutionRequest:
 
 
 @dataclass(frozen=True)
+class PlanningMetrics:
+    """Planning statistics — a subset of a future execution summary.
+
+    These fields persist across planning and execution stages.
+    When Part 7.4 adds execution metrics they will be added alongside
+    (not replacing) these planning metrics.
+    """
+    planned_operations_count: int = 0
+    affected_targets_count: int = 0
+    quarantined_skipped: int = 0
+
+
+@dataclass(frozen=True)
 class EvolutionSummary:
     evolution_started: bool
     evolution_completed: bool
     evolution_success: bool
     evolution_duration: timedelta
-    planned_operations_count: int = 0
-    affected_targets_count: int = 0
-    quarantined_skipped: int = 0
+    planning: PlanningMetrics = PlanningMetrics()

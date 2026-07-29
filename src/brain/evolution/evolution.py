@@ -3,6 +3,7 @@ from brain.evolution.conflict import Conflict
 from brain.evolution.evolution_context import EvolutionContext
 from brain.evolution.evolution_operation import EvolutionOperation
 from brain.evolution.evolution_plan import EvolutionPlan
+from brain.evolution.planning import EvolutionPlanner
 from brain.evolution.transition import KnowledgeTransition
 from brain.evolution.transition_type import TransitionType
 from brain.repositories.base import KnowledgeRepository
@@ -12,11 +13,13 @@ from brain.repositories.evolution_base import EvolutionRepository
 class EvolutionEngine:
     def __init__(
         self,
-        knowledge_repository: KnowledgeRepository,
-        evolution_repository: EvolutionRepository,
+        knowledge_repository: KnowledgeRepository | None = None,
+        evolution_repository: EvolutionRepository | None = None,
+        planner: EvolutionPlanner | None = None,
     ) -> None:
         self._knowledge = knowledge_repository
         self._evolution = evolution_repository
+        self._planner = planner or EvolutionPlanner()
 
     def plan(
         self,
@@ -24,50 +27,7 @@ class EvolutionEngine:
         category: str,
         context: EvolutionContext,
     ) -> EvolutionPlan:
-        quarantined = set(context.quarantined_targets)
-        available = tuple(t for t in targets if t not in quarantined)
-        operations: list[EvolutionOperation] = []
-
-        if category == "duplicate":
-            for i in range(0, len(available) - 1, 2):
-                if i + 1 < len(available):
-                    a, b = available[i], available[i + 1]
-                    operations.append(EvolutionOperation(
-                        target_id=a,
-                        expected_version_id=a,
-                        transition_type=TransitionType.SUPERSEDES,
-                        reason=f"Planned supersede: duplicate {a} → {b}",
-                    ))
-        elif category == "conflict":
-            for i in range(0, len(available) - 1, 2):
-                if i + 1 < len(available):
-                    a, b = available[i], available[i + 1]
-                    operations.append(EvolutionOperation(
-                        target_id=a,
-                        expected_version_id=a,
-                        transition_type=TransitionType.REFINEMENT,
-                        reason=f"Planned refinement: conflict between {a} and {b}",
-                    ))
-        elif category == "obsolete":
-            for target in available:
-                operations.append(EvolutionOperation(
-                    target_id=target,
-                    expected_version_id=target,
-                    transition_type=TransitionType.UPDATE,
-                    reason=f"Planned archival: obsolete target {target}",
-                ))
-
-        affected = tuple(sorted(set(op.target_id for op in operations)))
-        quarantined_count = len(targets) - len(available)
-
-        return EvolutionPlan(
-            operations=tuple(operations),
-            affected_targets=affected,
-            metadata=(
-                ("category", category),
-                ("quarantined_skipped", str(quarantined_count)),
-            ),
-        )
+        return self._planner.plan(targets, category, context)
 
     def evolve(
         self,
