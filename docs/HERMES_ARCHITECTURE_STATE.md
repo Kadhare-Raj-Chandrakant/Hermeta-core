@@ -220,9 +220,9 @@ EvolutionSummary
 
 ## Current Status
 
-- **Test count:** 1348 passing (full suite)
+- **Test count:** 1365 passing (full suite)
 - **Current phase:** Milestone 25 Stabilization
-- **Active task:** Stabilization Part A.2 — Dependency Direction Audit
+- **Active task:** Stabilization Part A.3 — Boundary Responsibility Audit
 
 ---
 

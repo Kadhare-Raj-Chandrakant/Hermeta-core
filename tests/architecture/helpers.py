@@ -126,6 +126,43 @@ def get_package_modules(package_dir: Path) -> list[Path]:
     return sorted(package_dir.rglob("*.py"))
 
 
+def find_ast_calls_by_name(file_path: Path, names: set[str]) -> list[tuple[int, str, str]]:
+    """Find all Call AST nodes where the function name (simple or attribute) is in `names`.
+
+    Returns list of (lineno, full_call_expr, name) tuples.
+    Useful for detecting forbidden class instantiations.
+    """
+    tree = parse_ast(file_path)
+    results: list[tuple[int, str, str]] = []
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        if isinstance(node.func, ast.Name):
+            if node.func.id in names:
+                results.append((node.lineno, node.func.id, node.func.id))
+        elif isinstance(node.func, ast.Attribute):
+            if node.func.attr in names:
+                results.append((node.lineno, ast.unparse(node.func), node.func.attr))
+
+    return results
+
+
+def get_class_method_names(file_path: Path) -> list[tuple[str, str]]:
+    """Return list of (class_name, method_name) tuples for all methods defined in a file."""
+    tree = parse_ast(file_path)
+    class_methods: list[tuple[str, str]] = []
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ClassDef):
+            continue
+        for item in node.body:
+            if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                class_methods.append((node.name, item.name))
+
+    return class_methods
+
+
 def get_module_tree(package_root: Path) -> dict[str, set[str]]:
     """Build a map of module_name -> set of imports for all modules under a package root.
 
