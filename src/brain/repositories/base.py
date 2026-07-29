@@ -33,3 +33,7 @@ class KnowledgeRepository(ABC):
     @abstractmethod
     def list_all_versions(self) -> tuple[KnowledgeVersion, ...]:
         """Return all versions across all identities."""
+
+    @abstractmethod
+    def replace_version(self, version: KnowledgeVersion) -> None:
+        """Replace an existing version identified by version_id."""

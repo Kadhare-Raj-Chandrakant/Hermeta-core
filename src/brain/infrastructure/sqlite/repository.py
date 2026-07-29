@@ -259,6 +259,19 @@ class SQLiteKnowledgeRepository(KnowledgeRepository, EvolutionRepository):
         ).fetchall()
         return tuple(self._load_conflict(r) for r in rows)
 
+    def replace_version(self, version: KnowledgeVersion) -> None:
+        self._conn.execute(
+            """UPDATE versions SET lifecycle_state=? WHERE version_id=?""",
+            (version.lifecycle_state.value, str(version.version_id)),
+        )
+        self._conn.commit()
+
+    def save_execution_record(self, record: object) -> None:
+        pass
+
+    def get_execution_records(self) -> tuple[object, ...]:
+        return ()
+
     def _load_conflict(self, row: object) -> Conflict:
         conflict_id = row["id"]
         vid_rows = self._conn.execute(

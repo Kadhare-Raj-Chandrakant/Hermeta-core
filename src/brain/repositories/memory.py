@@ -34,6 +34,19 @@ class InMemoryKnowledgeRepository(KnowledgeRepository, EvolutionRepository):
         self._versions: dict[uuid.UUID, list[KnowledgeVersion]] = {}
         self._transitions: list[KnowledgeTransition] = []
         self._conflicts: list[Conflict] = []
+        self._execution_records: list[object] = []
+
+    def snapshot(self):
+        return (
+            dict(self._identities),
+            {k: list(v) for k, v in self._versions.items()},
+            list(self._transitions),
+            list(self._conflicts),
+            list(self._execution_records),
+        )
+
+    def restore(self, snapshot) -> None:
+        self._identities, self._versions, self._transitions, self._conflicts, self._execution_records = snapshot
 
     def create_identity(self) -> KnowledgeIdentity:
         identity = KnowledgeIdentity.create()
@@ -90,6 +103,16 @@ class InMemoryKnowledgeRepository(KnowledgeRepository, EvolutionRepository):
             all_versions.extend(versions)
         return tuple(sorted(all_versions, key=lambda v: v.version_number))
 
+    def replace_version(self, version: KnowledgeVersion) -> None:
+        identity_versions = self._versions.get(version.identity_id)
+        if identity_versions is None:
+            raise IdentityNotFoundError(version.identity_id)
+        for i, existing in enumerate(identity_versions):
+            if existing.version_id == version.version_id:
+                identity_versions[i] = version
+                return
+        raise VersionNotFoundError(version.identity_id, version.version_number)
+
     def create_transition(self, transition: KnowledgeTransition) -> None:
         self._transitions.append(transition)
 
@@ -107,3 +130,9 @@ class InMemoryKnowledgeRepository(KnowledgeRepository, EvolutionRepository):
 
     def get_conflicts(self) -> tuple[Conflict, ...]:
         return tuple(self._conflicts)
+
+    def save_execution_record(self, record: object) -> None:
+        self._execution_records.append(record)
+
+    def get_execution_records(self) -> tuple[object, ...]:
+        return tuple(self._execution_records)

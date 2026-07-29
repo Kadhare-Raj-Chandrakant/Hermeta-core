@@ -107,15 +107,21 @@ class EvolutionRequest:
 
 @dataclass(frozen=True)
 class PlanningMetrics:
-    """Planning statistics — a subset of a future execution summary.
-
-    These fields persist across planning and execution stages.
-    When Part 7.4 adds execution metrics they will be added alongside
-    (not replacing) these planning metrics.
-    """
+    """Planning statistics — coexists with ExecutionMetrics."""
     planned_operations_count: int = 0
     affected_targets_count: int = 0
     quarantined_skipped: int = 0
+
+
+@dataclass(frozen=True)
+class ExecutionMetrics:
+    """Execution statistics — coexists with PlanningMetrics."""
+    executed_operations: int = 0
+    successful_operations: int = 0
+    failed_operations: int = 0
+    rolled_back: bool = False
+    optimistic_conflicts: int = 0
+    transaction_duration: timedelta = timedelta(0)
 
 
 @dataclass(frozen=True)
@@ -125,3 +131,4 @@ class EvolutionSummary:
     evolution_success: bool
     evolution_duration: timedelta
     planning: PlanningMetrics = PlanningMetrics()
+    execution: ExecutionMetrics = ExecutionMetrics()

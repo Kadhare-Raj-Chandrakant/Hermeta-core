@@ -25,3 +25,11 @@ class EvolutionRepository(ABC):
     @abstractmethod
     def get_conflicts(self) -> tuple[Conflict, ...]:
         """Return all stored conflicts."""
+
+    @abstractmethod
+    def save_execution_record(self, record: object) -> None:
+        """Persist an execution record (EvolutionRecord or ExecutionFailureRecord)."""
+
+    @abstractmethod
+    def get_execution_records(self) -> tuple[object, ...]:
+        """Return all stored execution records."""
