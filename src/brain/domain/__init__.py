@@ -64,7 +64,6 @@ from brain.domain.governance import (
     GovernancePolicy,
     GovernanceRationale,
     GovernanceFinding,
-    GovernancePolicy,
 )
 
 __all__ = [
