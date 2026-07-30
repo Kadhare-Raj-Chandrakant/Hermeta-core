@@ -18,6 +18,7 @@ class GovernanceRationale:
     explanation: str = ""
     supporting_evidence_ids: tuple = ()
     constitutional_interpretations: tuple = ()
+    constitutional_basis: tuple = ()
     findings: tuple = ()
     created_at: datetime = datetime.now(timezone.utc)
 

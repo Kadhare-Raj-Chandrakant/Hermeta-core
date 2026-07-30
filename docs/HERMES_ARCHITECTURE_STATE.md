@@ -777,6 +777,198 @@ Architecture tests in `tests/architecture/test_proposal_architecture.py` verify:
 
 ---
 
+## Proposal Evaluation Constitution (B.4)
+
+### Purpose
+
+B.4 introduces the analytical layer between Proposal and Governance.
+
+> **Problem Statement → Proposal Space → Evaluation Space → Governance Decision**
+
+This milestone defines the domain vocabulary for analytical reasoning about proposals. It does NOT decide whether any proposal is good — that belongs to Governance (B.5).
+
+### Constitutional Laws (E-1 through E-16)
+
+| Law | Statement |
+|-----|-----------|
+| **E-1** | Evaluation ≠ Proposal. |
+| **E-2** | Evaluation ≠ Decision. |
+| **E-3** | Evaluation ≠ Execution. |
+| **E-4** | Evaluation never mutates Proposal. |
+| **E-5** | Evaluation never creates Proposal. |
+| **E-6** | Evaluation preserves uncertainty. |
+| **E-7** | Evaluation records explicit evidence. |
+| **E-8** | Tradeoffs remain explicit. |
+| **E-9** | Evaluation never ranks. |
+| **E-10** | Evaluation never filters. |
+| **E-11** | Evaluation never approves. |
+| **E-12** | Evaluation is deterministic. |
+| **E-13** | Comparison ≠ Ranking. |
+| **E-14** | Every proposal receives an independent evaluation. |
+| **E-15** | Evaluation history is immutable. |
+| **E-16** | Evaluation conclusions are explainable through evidence. |
+
+### Domain Models (B.4)
+
+All models reside in `brain/domain/evaluation/` — pure domain layer with **zero dependencies** on application, runtime, adapters, repositories, infrastructure, or engines.
+
+| Model | Purpose | Contains | Does NOT Contain |
+|-------|---------|----------|------------------|
+| `Evaluation` | Complete analytical assessment of one Proposal | evaluation_id, proposal_id, state, dimensional_analyses, global_tradeoffs, evidence_ids, summary_judgment, known_uncertainties, created_at, superseded_by | score, confidence, ranking, approval, execution, implementation details, repository references |
+| `EvaluationSpace` | Immutable container preserving ALL evaluations | space_id, problem_statement_id, proposal_ids, evaluations, created_at | ranking, filtering, selection, merging, optimization |
+| `DimensionalAnalysis` | Per-dimension structured reasoning | analysis_id, dimension, facts, judgments, evidence, tradeoff_ids, created_at | score, recommendation |
+| `Tradeoff` | First-class benefit/cost/dimension object | tradeoff_id, benefit, cost, dimension, created_at | flattened text, optimization |
+| `EvaluationEvidence` | Explicit traceable evidence | evidence_id, evidence_type, description, observation_ids, hypothesis_ids, problem_ids, proposal_ids, created_at | invented evidence, implicit assumptions |
+| `EvaluationDimension` / `EvidenceType` / `EvaluationState` | Enums for structured reasoning | 8 dimensions, 6 evidence types, 3 states | numerical scoring |
+
+### Separation Guarantees
+
+| Separation | Enforced By |
+|------------|-------------|
+| `Evaluation` ≠ `Proposal` | Different modules; no cross-imports; E-1/E-2/E-3 tests |
+| `Evaluation` ≠ `Decision` | No decision fields; no imports; E-2/E-3/E-11 tests |
+| `Evaluation` ≠ `Execution` | No execution fields; no imports; E-3/E-4 tests |
+| `EvaluationSpace` ≠ Evaluation | No rank/evaluate/choose methods; container-only tests |
+| `Evaluation` ≠ Implementation | No code-level details; intent-only dimensions; E-10 tests |
+
+### B.4 Test Coverage
+
+Architecture tests in `tests/architecture/test_evaluation_architecture.py` verify:
+
+- Domain purity: 0 forbidden imports (E-1, E-2, E-3, E-4, E-11, E-12)
+- Read-only design: 0 mutation/execution/recommendation methods (E-2, E-3, E-4, E-9, E-12)
+- No self-evaluation fields: 0 score/confidence/ranking/approval fields (E-6)
+- No mutation/execution references (E-4)
+- Traceability chain preserved: evidence_ids, dimensional_analyses.evidence, tradeoff_ids (E-7)
+- ProposalSpace is container-only: 0 ranking/filtering/merging methods (E-9, E-10)
+- No Evaluation/Decision/Execution references (E-1, E-2, E-3, E-11)
+- Proposal describes intent: intended_outcomes field exists (E-10)
+- Categories represent cognitive intent: no implementation-oriented names (E-8)
+- Observation independence preserved (E-7)
+
+**Total: 14 new architecture tests — ALL PASS**
+
+**B.4 Implementation: COMPLETE — Proposal Evaluation foundation established.**
+
+---
+
+## Governance Constitution (B.5)
+
+### Purpose
+
+B.5 introduces the Governance layer — the constitutional authority of Hermes.
+
+> **Evaluation → Governance Decision → Execution Authorization**
+
+Governance is the constitutional authority. Its responsibility is to determine which decisions are constitutionally permissible.
+
+Governance does NOT:
+- Create proposals
+- Evaluate proposals
+- Optimize proposals
+- Execute proposals
+
+### Constitutional Laws (G-1 through G-23)
+
+| Law | Statement |
+|-----|-----------|
+| **G-1** | Governance consumes Evaluation only. |
+| **G-2** | Governance never evaluates. |
+| **G-3** | Governance never creates proposals. |
+| **G-4** | Governance never executes. |
+| **G-5** | Every decision references explicit evidence. |
+| **G-6** | Every decision references constitutional policies. |
+| **G-7** | Governance is deterministic. |
+| **G-8** | Governance may defer decisions. |
+| **G-9** | Rejected decisions remain immutable. |
+| **G-10** | Every decision is explainable. |
+| **G-11** | Governance never mutates Evaluation. |
+| **G-12** | Governance never mutates Proposal. |
+| **G-13** | One active decision per Evaluation. History preserves superseded decisions. |
+| **G-14** | Decision history is immutable. |
+| **G-15** | Constitution overrides optimization. |
+| **G-16** | Governance never bypasses constitutional policy. |
+| **G-17** | Governance never invents evidence. |
+| **G-18** | Governance owns decisions only. Execution belongs elsewhere. |
+| **G-19** | Governance never performs optimization. |
+| **G-20** | Decision and Rationale are separate constitutional objects. |
+| **G-21** | Policies are immutable. |
+| **G-22** | Identical inputs always produce identical governance outcomes. |
+| **G-23** | Governance never creates constitutional rules. It only applies existing ones. |
+
+### Domain Models (B.5)
+
+All models reside in `brain/domain/governance/` — pure domain layer with **zero dependencies** on application, runtime, adapters, repositories, infrastructure, or engines.
+
+| Model | Purpose | Contains | Does NOT Contain |
+|-------|---------|----------|------------------|
+| `GovernanceDecision` | Constitutional outcome of one Evaluation | decision_id, evaluation_id, state, rationale_id, policy_ids, created_at, superseded_by | execution_plan, mutation, repository references, runtime references, optimization, proposal generation, evaluation logic |
+| `DecisionContext` | Immutable evaluation context for decision | evaluation_id, proposal_ids, policy_ids, constitutional_version, metadata, created_at | runtime state, repository data, execution context, optimization data, external systems |
+| `GovernanceHistory` | Immutable record of every governance decision | history_id, decision_ids, constitutional_version, created_at | overwrite capability, mutation methods |
+| `GovernancePolicy` | Immutable constitutional rule | policy_id, identifier, title, description, category, governing_principle, version, created_at | mutation capability, policy creation methods |
+| `GovernanceRationale` | Structured justification with constitutional basis | rationale_id, explanation, supporting_evidence_ids, constitutional_interpretations, constitutional_basis, findings, created_at | authority, decision state, approval/rejection |
+| `GovernanceFinding` | Structured constitutional observation | finding_id, title, description, severity, policy_ids, evidence_ids, created_at | mutation capability, authority |
+
+### Enums (B.5)
+
+| Enum | Values | Purpose |
+|------|--------|---------|
+| `DecisionState` | APPROVED, REJECTED, DEFERRED, INSUFFICIENT_EVIDENCE, CONSTITUTIONAL_CONFLICT, REQUIRES_REVIEW, WITHDRAWN, SUPERSEDED | Constitutional decision outcomes — Execution is NOT a state |
+| `DecisionMode` | CONSTITUTIONAL, HUMAN_REVIEW, AUTOMATED_POLICY, EMERGENCY | How the decision was made |
+| `PolicyCategory` | ARCHITECTURAL_INTEGRITY, STATE_OWNERSHIP, DEPENDENCY_DIRECTION, TRANSACTION_BOUNDARIES, FAILURE_ISOLATION, RECOVERY_OWNERSHIP, CONTRACT_COMPLIANCE, EVOLUTION_SAFETY | Constitutional policy domains |
+| `FindingSeverity` | INFO, WARNING, CRITICAL, BLOCKING | Finding severity classification |
+
+### Separation Guarantees
+
+| Separation | Enforced By |
+|------------|-------------|
+| `GovernanceDecision` ≠ `Evaluation` | Different modules; no cross-imports; G-1 tests |
+| `GovernanceDecision` ≠ `Decision` | No decision imports; G-1 tests |
+| `GovernanceDecision` ≠ `Execution` | No execution fields; no imports; G-2/G-4 tests |
+| `GovernanceDecision` ≠ `GovernanceRationale` | Separate models; authority vs reasoning; G-20 tests |
+| `GovernancePolicy` ≠ Mutation | Frozen dataclass; no mutation methods; G-21 tests |
+| `GovernanceHistory` ≠ Mutation | Append-only via `with_decision`; G-14 tests |
+| `DecisionContext` ≠ Hidden Dependencies | Only allowed inputs; G-3/G-4/G-11/G-12 tests |
+
+### B.5 Test Coverage
+
+Architecture tests in `tests/architecture/test_governance_architecture.py` verify:
+
+- Domain purity: 0 forbidden imports (G-1, G-2, G-4, G-11, G-12)
+- Read-only design: 0 mutation/execution/evaluation methods (G-11, G-12)
+- No Evaluation/Execution/Decision logic in Governance (G-1, G-2, G-4)
+- Decision references evidence and policies (G-5, G-6)
+- Deterministic: frozen dataclasses (G-7, G-22)
+- Deferral supported: DEFERRED state (G-8)
+- Rejected immutable: REJECTED state + supersession (G-9, G-14)
+- Explainable: Rationale with constitutional_basis (G-10)
+- Evaluation never mutated: 0 Evaluation imports (G-11)
+- Proposal never mutated: 0 Proposal imports (G-12)
+- One decision per evaluation: evaluation_id field (G-13)
+- History immutable: frozen + superseded state + append-only (G-14)
+- Constitutional override: PolicyCategory enum (G-15)
+- Policy enforcement: DecisionContext requires policy_ids (G-16)
+- No evidence invention: traceability IDs (G-17)
+- Decisions only: no execution fields (G-18)
+- No optimization: 0 optimization methods (G-19)
+- Authority/Reasoning separation: Decision has no reasoning fields, Rationale has no state (G-20)
+- Policies immutable: frozen dataclass (G-21)
+- Deterministic: all models frozen (G-22)
+- No rule creation: 0 policy creation methods (G-23)
+- Authority/Reasoning separation verified
+- DecisionContext restricts inputs
+- GovernancePolicy verified
+- GovernanceHistory verified
+- Explainability chain verified
+- Dependency direction preserved
+- Proposal independence: 0 Evaluation imports
+
+**Total: 48 new architecture tests — ALL PASS**
+
+**B.5 Implementation: COMPLETE — Governance & Constitutional Decision foundation established.**
+
+---
+
 ## Phase B Milestones (Planned)
 
 | Milestone | Scope | Status |
@@ -785,6 +977,7 @@ Architecture tests in `tests/architecture/test_proposal_architecture.py` verify:
 | **B.1** | Self Observation — detecting evolution opportunities | ✅ COMPLETE |
 | **B.2** | Hypothesis & Problem Formulation — representing cognitive gaps | ✅ COMPLETE |
 | **B.3** | Proposal Generation — creating improvement proposals | ✅ COMPLETE |
-| **B.4** | Evaluation & Decision — analyzing and approving proposals | ⏳ PLANNED |
-| **B.5** | Execution & Verification — running approved evolutions | ⏳ PLANNED |
-| **B.6** | Constitutional Amendment Process — changing constitutional laws | ⏳ PLANNED |
+| **B.4** | Proposal Evaluation — analyzing and approving proposals | ✅ COMPLETE |
+| **B.5** | Governance & Constitutional Decision — constitutional authority | ✅ COMPLETE |
+| **B.6** | Execution & Verification — running approved evolutions | ⏳ PLANNED |
+| **B.7** | Constitutional Amendment Process — changing constitutional laws | ⏳ PLANNED |
