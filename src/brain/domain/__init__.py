@@ -53,6 +53,19 @@ from brain.domain.evaluation import (
     EvaluationEvidence,
     DimensionalAnalysis,
 )
+from brain.domain.governance import (
+    DecisionState,
+    PolicyCategory,
+    FindingSeverity,
+    DecisionMode,
+    GovernanceDecision,
+    DecisionContext,
+    GovernanceHistory,
+    GovernancePolicy,
+    GovernanceRationale,
+    GovernanceFinding,
+    GovernancePolicy,
+)
 
 __all__ = [
     "KnowledgeType",
@@ -99,4 +112,14 @@ __all__ = [
     "Tradeoff",
     "EvaluationEvidence",
     "DimensionalAnalysis",
+    "DecisionState",
+    "PolicyCategory",
+    "FindingSeverity",
+    "DecisionMode",
+    "GovernanceDecision",
+    "DecisionContext",
+    "GovernanceHistory",
+    "GovernancePolicy",
+    "GovernanceRationale",
+    "GovernanceFinding",
 ]
