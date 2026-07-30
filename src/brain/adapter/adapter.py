@@ -6,8 +6,8 @@ from brain.adapter.lifecycle import AdapterLifecycle
 from brain.adapter.models import AdapterContext, AdapterLearning, AdapterTask
 from brain.adapter.task_mapper import TaskMapper
 from brain.application.brain_session import BrainSession
+from brain.application.usecases.models import KnowledgeVersionDTO
 from brain.domain.enums import KnowledgeType
-from brain.domain.version import KnowledgeVersion
 from brain.pipeline.candidate import KnowledgeCandidate
 from brain.pipeline.evidence import Evidence
 
@@ -37,7 +37,7 @@ class BrainAdapter(HermesBrainAdapter):
         except Exception as e:
             raise AdapterError(f"Internal error during start_task: {e}") from e
 
-    def learn(self, learning: AdapterLearning) -> KnowledgeVersion:
+    def learn(self, learning: AdapterLearning) -> KnowledgeVersionDTO:
         try:
             self._lifecycle.check_active()
             candidate = KnowledgeCandidate(

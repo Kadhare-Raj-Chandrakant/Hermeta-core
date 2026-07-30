@@ -41,6 +41,28 @@ class PlanningSummary:
 
 
 @dataclass(frozen=True)
+class PlanningSummary:
+    plan_id: uuid.UUID
+    plan_status: str
+    goal_count: int
+    action_count: int
+    dependency_count: int
+    blocker_count: int
+
+
+@dataclass(frozen=True)
+class PlanDTO:
+    plan_id: uuid.UUID
+    plan_status: str
+    goal_title: str
+    goal_description: str
+    project: str
+    action_count: int
+    dependency_count: int
+    blocker_count: int
+
+
+@dataclass(frozen=True)
 class ExecutionRequest:
     plan_id: uuid.UUID
     project: str = ""
@@ -106,6 +128,12 @@ class EvolutionRequest:
 
 
 @dataclass(frozen=True)
+class EvolutionContextDTO:
+    attempt_counts: tuple[tuple[uuid.UUID, int], ...] = ()
+    quarantined_targets: tuple[uuid.UUID, ...] = ()
+
+
+@dataclass(frozen=True)
 class PlanningMetrics:
     """Planning statistics — coexists with ExecutionMetrics."""
     planned_operations_count: int = 0
@@ -132,3 +160,16 @@ class EvolutionSummary:
     evolution_duration: timedelta
     planning: PlanningMetrics = PlanningMetrics()
     execution: ExecutionMetrics = ExecutionMetrics()
+
+
+@dataclass(frozen=True)
+class KnowledgeVersionDTO:
+    version_id: uuid.UUID
+    identity_id: uuid.UUID
+    version_number: int
+    knowledge_type: str
+    title: str
+    understanding: str
+    confidence: float
+    lifecycle_state: str
+    created_at: str

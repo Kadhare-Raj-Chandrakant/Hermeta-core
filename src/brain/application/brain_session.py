@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from brain.application.brain_service import BrainService
+from brain.application.usecases.models import KnowledgeVersionDTO
 from brain.domain.task import Task
-from brain.domain.version import KnowledgeVersion
 from brain.pipeline.candidate import KnowledgeCandidate
 from brain.services.compiler import ContextPackage
 
@@ -30,7 +30,7 @@ class BrainSession:
         self._started_at = datetime.now(timezone.utc)
         return self._brain.prepare(task)
 
-    def learn(self, candidate: KnowledgeCandidate) -> KnowledgeVersion:
+    def learn(self, candidate: KnowledgeCandidate) -> KnowledgeVersionDTO:
         if self._task is None:
             raise RuntimeError("No active session")
         version = self._brain.learn(candidate)

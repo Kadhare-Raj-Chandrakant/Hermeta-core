@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from brain.application.brain_service import BrainService
+from brain.domain.ports.knowledge_ingestion import KnowledgeIngestionPort
 from brain.detection.observation import Observation
 from brain.detection.pipeline import DetectionPipeline
 from brain.events.publisher import EventPublisher
@@ -18,7 +18,7 @@ class LearningCoordinator:
         self,
         detection: DetectionPipeline,
         validation: ValidationEngine,
-        brain: BrainService,
+        brain: KnowledgeIngestionPort,
         publisher: EventPublisher,
         reflection_engine: ReflectionEngine,
         reflection_bridge: ReflectionBridge,

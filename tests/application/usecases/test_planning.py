@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from brain.application.usecases.models import PlanningRequest, PlanningSummary
+from brain.application.usecases.models import PlanDTO, PlanningRequest, PlanningSummary
 from brain.application.usecases.planning import PlanningUseCase
 from brain.domain.task import Priority, TaskType
 from brain.planning.action import Action
@@ -114,7 +114,7 @@ class TestExecuteRequest:
         request = _make_request()
         summary = use_case.execute_request(request)
         plan = use_case.get_plan(summary.plan_id)
-        assert isinstance(plan, Plan)
+        assert isinstance(plan, PlanDTO)
 
     def test_execute_request_creates_goal(self):
         engine = MagicMock(spec=PlanningEngine)
@@ -219,8 +219,8 @@ class TestGetPlan:
         request = _make_request()
         summary = use_case.execute_request(request)
         plan = use_case.get_plan(summary.plan_id)
-        assert isinstance(plan, Plan)
-        assert plan.id == summary.plan_id
+        assert isinstance(plan, PlanDTO)
+        assert plan.plan_id == summary.plan_id
 
     def test_get_plan_raises_for_unknown_id(self):
         engine = _make_engine()

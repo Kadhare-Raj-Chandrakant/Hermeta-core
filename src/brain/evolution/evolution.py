@@ -21,7 +21,7 @@ class EvolutionEngine:
         self._evolution = evolution_repository
         self._planner = planner or EvolutionPlanner()
 
-    def plan(
+    def _plan(
         self,
         targets: tuple,
         category: str,

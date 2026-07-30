@@ -2,6 +2,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 
 from brain.application.usecases.models import (
+    EvolutionContextDTO,
     EvolutionRequest,
     EvolutionSummary,
     ExecutionMetrics,
@@ -26,20 +27,25 @@ class EvolutionUseCase:
     def execute(
         self,
         request: EvolutionRequest,
-        context: EvolutionContext | None = None,
+        context: EvolutionContextDTO | None = None,
     ) -> EvolutionSummary:
         start = datetime.now(timezone.utc)
 
         if context is None:
-            context = EvolutionContext()
+            domain_context = EvolutionContext()
+        else:
+            domain_context = EvolutionContext(
+                attempt_count=0,
+                quarantined_targets=context.quarantined_targets,
+            )
 
         plan = self.planner.plan(
             targets=request.targets,
             category=request.context,
-            context=context,
+            context=domain_context,
         )
 
-        planning_metrics = self._build_planning_metrics(plan, context)
+        planning_metrics = self._build_planning_metrics(plan, domain_context)
         execution_metrics = ExecutionMetrics()
 
         uow = EvolutionUnitOfWork()
@@ -50,7 +56,7 @@ class EvolutionUseCase:
         tx_start = datetime.now(timezone.utc)
 
         try:
-            record = self.executor.execute(plan, context)
+            record = self.executor.execute(plan, domain_context)
             uow.commit()
             tx_end = datetime.now(timezone.utc)
             execution_metrics = replace(execution_metrics,

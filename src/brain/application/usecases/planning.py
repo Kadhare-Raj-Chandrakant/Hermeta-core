@@ -1,7 +1,7 @@
 import uuid
 from dataclasses import dataclass, field
 
-from brain.application.usecases.models import PlanningRequest, PlanningSummary
+from brain.application.usecases.models import PlanDTO, PlanningRequest, PlanningSummary
 from brain.domain.enums import KnowledgeType
 from brain.domain.task import Priority
 from brain.planning.action import Action
@@ -17,14 +17,18 @@ class PlanningUseCase:
     engine: PlanningEngine
     _plans: dict[uuid.UUID, Plan] = field(default_factory=dict, repr=False)
 
-    def execute(
+    def _execute(
         self,
         goal: Goal,
         actions: tuple[Action, ...],
         dependencies: tuple[Dependency, ...] = (),
         context: PlanningContext | None = None,
     ) -> Plan:
+        """Internal method for direct engine access - use execute_request for DTO boundary."""
         return self.engine.create_plan(goal, actions, dependencies, context)
+
+    # Public alias for internal engine access (tests and workflow)
+    execute = _execute
 
     def execute_request(self, request: PlanningRequest) -> PlanningSummary:
         goal = Goal(
@@ -52,5 +56,15 @@ class PlanningUseCase:
             blocker_count=len(plan.blockers),
         )
 
-    def get_plan(self, plan_id: uuid.UUID) -> Plan:
-        return self._plans[plan_id]
+    def get_plan(self, plan_id: uuid.UUID) -> PlanDTO:
+        plan = self._plans[plan_id]
+        return PlanDTO(
+            plan_id=plan.id,
+            plan_status=plan.status.value,
+            goal_title=plan.goal.title,
+            goal_description=plan.goal.description,
+            project=plan.goal.project,
+            action_count=len(plan.actions),
+            dependency_count=len(plan.dependencies),
+            blocker_count=len(plan.blockers),
+        )

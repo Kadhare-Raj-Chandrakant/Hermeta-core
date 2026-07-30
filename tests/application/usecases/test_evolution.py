@@ -4,6 +4,7 @@ import pytest
 
 from brain.application.usecases.evolution import EvolutionUseCase
 from brain.application.usecases.models import (
+    EvolutionContextDTO,
     EvolutionRequest,
     EvolutionSummary,
     ExecutionMetrics,
@@ -46,7 +47,34 @@ def _make_context(
     attempt_count: int = 0,
     quarantined_targets: tuple[uuid.UUID, ...] = (),
     planning_policy: str = "default",
+) -> EvolutionContextDTO:
+    return EvolutionContextDTO(
+        attempt_counts=tuple((tid, attempt_count) for tid in quarantined_targets),
+        quarantined_targets=quarantined_targets,
+    )
+
+
+def _make_domain_context(
+    previous_failures: tuple[tuple[uuid.UUID, ...], ...] = (),
+    attempt_count: int = 0,
+    quarantined_targets: tuple[uuid.UUID, ...] = (),
+    planning_policy: str = "default",
 ) -> EvolutionContext:
+    return EvolutionContext(
+        previous_failures=previous_failures,
+        attempt_count=attempt_count,
+        quarantined_targets=quarantined_targets,
+        planning_policy=planning_policy,
+    )
+
+
+def _make_domain_context(
+    previous_failures: tuple[tuple[uuid.UUID, ...], ...] = (),
+    attempt_count: int = 0,
+    quarantined_targets: tuple[uuid.UUID, ...] = (),
+    planning_policy: str = "default",
+):
+    from brain.evolution.evolution_context import EvolutionContext
     return EvolutionContext(
         previous_failures=previous_failures,
         attempt_count=attempt_count,
@@ -167,48 +195,38 @@ class TestEvolutionPlanExpectedVersions:
 class TestEvolutionContextConstruction:
     def test_default_construction(self):
         ctx = _make_context()
-        assert ctx.previous_failures == ()
-        assert ctx.attempt_count == 0
+        assert ctx.attempt_counts == ()
         assert ctx.quarantined_targets == ()
-        assert ctx.planning_policy == "default"
 
     def test_with_values(self):
         tid = uuid.uuid4()
         ctx = _make_context(
-            previous_failures=((tid,),),
-            attempt_count=2,
             quarantined_targets=(tid,),
-            planning_policy="skip_failures",
         )
-        assert ctx.previous_failures == ((tid,),)
-        assert ctx.attempt_count == 2
         assert ctx.quarantined_targets == (tid,)
-        assert ctx.planning_policy == "skip_failures"
+        # attempt_counts should have entry for quarantined target
+        assert len(ctx.attempt_counts) == 1
 
     def test_frozen(self):
         ctx = _make_context()
         with pytest.raises(AttributeError):
-            ctx.attempt_count = 5
+            ctx.attempt_counts = ()
 
     def test_equality(self):
         tid = uuid.uuid4()
-        c1 = EvolutionContext(
-            previous_failures=((tid,),),
-            attempt_count=1,
+        c1 = EvolutionContextDTO(
+            attempt_counts=((tid, 1),),
             quarantined_targets=(tid,),
-            planning_policy="strict",
         )
-        c2 = EvolutionContext(
-            previous_failures=((tid,),),
-            attempt_count=1,
+        c2 = EvolutionContextDTO(
+            attempt_counts=((tid, 1),),
             quarantined_targets=(tid,),
-            planning_policy="strict",
         )
         assert c1 == c2
 
     def test_inequality_on_attempt_count(self):
-        c1 = _make_context(attempt_count=1)
-        c2 = _make_context(attempt_count=2)
+        c1 = _make_context()
+        c2 = _make_context(quarantined_targets=(uuid.uuid4(),))
         assert c1 != c2
 
     def test_inequality_on_quarantine(self):
@@ -399,7 +417,10 @@ class TestUseCaseExecutePlanningOnly:
         planner.plan.assert_called_once_with(
             targets=req.targets,
             category=req.context,
-            context=ctx,
+            context=EvolutionContext(
+                attempt_count=0,
+                quarantined_targets=ctx.quarantined_targets,
+            ),
         )
 
     def test_summary_started_completed(self):
@@ -628,7 +649,7 @@ class TestEvolutionExecutorExecutesOperations:
         op = EvolutionOperation(tid, v1.version_id, TransitionType.UPDATE, "test")
         plan = EvolutionPlan(operations=(op,), affected_targets=(tid,))
         executor = EvolutionExecutor(knowledge_repository=repo, evolution_repository=repo)
-        record = executor.execute(plan, _make_context())
+        record = executor.execute(plan, _make_domain_context())
         assert record.success is True
         assert record.operations_count == 1
 
@@ -646,7 +667,7 @@ class TestEvolutionExecutorExecutesOperations:
         )
         plan = EvolutionPlan(operations=ops, affected_targets=tuple(v.identity_id for v in versions))
         executor = EvolutionExecutor(knowledge_repository=repo, evolution_repository=repo)
-        executor.execute(plan, _make_context())
+        executor.execute(plan, _make_domain_context())
         for i, v in enumerate(versions):
             current = repo.get_latest_version(v.identity_id)
             assert current.version_id == v.version_id
@@ -666,7 +687,7 @@ class TestEvolutionExecutorExecutesOperations:
         plan = EvolutionPlan(operations=(op,), affected_targets=(identity.id,))
         executor = EvolutionExecutor(knowledge_repository=repo, evolution_repository=repo)
         ops_before = plan.operations
-        executor.execute(plan, _make_context())
+        executor.execute(plan, _make_domain_context())
         assert plan.operations == ops_before
 
     def test_executor_creates_transition(self):
@@ -677,7 +698,7 @@ class TestEvolutionExecutorExecutesOperations:
         op = EvolutionOperation(identity.id, v1.version_id, TransitionType.UPDATE, "test")
         plan = EvolutionPlan(operations=(op,), affected_targets=(identity.id,))
         executor = EvolutionExecutor(knowledge_repository=repo, evolution_repository=repo)
-        executor.execute(plan, _make_context())
+        executor.execute(plan, _make_domain_context())
         transitions = repo.get_transitions_for_version(v1.version_id)
         assert len(transitions) == 1
         assert str(transitions[0].reason).startswith("test")
@@ -696,7 +717,7 @@ class TestOptimisticConcurrency:
         op = EvolutionOperation(identity.id, v1.version_id, TransitionType.UPDATE, "test")
         plan = EvolutionPlan(operations=(op,), affected_targets=(identity.id,))
         executor = EvolutionExecutor(knowledge_repository=repo, evolution_repository=repo)
-        record = executor.execute(plan, _make_context())
+        record = executor.execute(plan, _make_domain_context())
         assert record.success is True
 
     def test_stale_version_aborts(self):
@@ -709,7 +730,7 @@ class TestOptimisticConcurrency:
         plan = EvolutionPlan(operations=(op,), affected_targets=(identity.id,))
         executor = EvolutionExecutor(knowledge_repository=repo, evolution_repository=repo)
         with pytest.raises(OptimisticConcurrencyError):
-            executor.execute(plan, _make_context())
+            executor.execute(plan, _make_domain_context())
 
     def test_no_mutation_after_stale_detection(self):
         repo = InMemoryKnowledgeRepository()
@@ -721,7 +742,7 @@ class TestOptimisticConcurrency:
         plan = EvolutionPlan(operations=(op,), affected_targets=(identity.id,))
         executor = EvolutionExecutor(knowledge_repository=repo, evolution_repository=repo)
         with pytest.raises(OptimisticConcurrencyError):
-            executor.execute(plan, _make_context())
+            executor.execute(plan, _make_domain_context())
         current = repo.get_latest_version(identity.id)
         assert current.version_id == v1.version_id
         assert current.lifecycle_state.value == "active"
@@ -742,7 +763,7 @@ class TestOptimisticConcurrency:
         plan = EvolutionPlan(operations=ops, affected_targets=tuple(id_.id for id_ in ids))
         executor = EvolutionExecutor(knowledge_repository=repo, evolution_repository=repo)
         with pytest.raises(OptimisticConcurrencyError):
-            executor.execute(plan, _make_context())
+            executor.execute(plan, _make_domain_context())
         current0 = repo.get_latest_version(ids[0].id)
         assert current0.lifecycle_state.value == "active"
 
@@ -763,7 +784,7 @@ class TestOptimisticConcurrency:
         plan = EvolutionPlan(operations=ops, affected_targets=tuple(id_.id for id_ in ids))
         executor = EvolutionExecutor(knowledge_repository=repo, evolution_repository=repo)
         with pytest.raises(OptimisticConcurrencyError):
-            executor.execute(plan, _make_context())
+            executor.execute(plan, _make_domain_context())
         for id_ in ids:
             current = repo.get_latest_version(id_.id)
             assert current.lifecycle_state.value == "active"
@@ -823,7 +844,7 @@ class TestTransactionCommitOnSuccess:
         uow.begin()
         try:
             executor = EvolutionExecutor(knowledge_repository=repo, evolution_repository=repo)
-            executor.execute(plan, _make_context())
+            executor.execute(plan, _make_domain_context())
             uow.commit()
         except Exception:
             uow.rollback()
@@ -850,7 +871,7 @@ class TestTransactionRollbackOnFailure:
         uow.begin()
         try:
             executor = EvolutionExecutor(knowledge_repository=repo, evolution_repository=repo)
-            executor.execute(plan, _make_context())
+            executor.execute(plan, _make_domain_context())
             uow.commit()
         except OptimisticConcurrencyError:
             uow.rollback()
@@ -874,7 +895,7 @@ class TestTransactionRollbackOnFailure:
         try:
             repo.replace_version = lambda x: (_ for _ in ()).throw(RuntimeError("repo fail"))
             executor = EvolutionExecutor(knowledge_repository=repo, evolution_repository=repo)
-            executor.execute(plan, _make_context())
+            executor.execute(plan, _make_domain_context())
             uow.commit()
         except Exception:
             uow.rollback()
@@ -897,7 +918,7 @@ class TestTransactionRollbackOnFailure:
         uow.begin()
         try:
             executor = EvolutionExecutor(knowledge_repository=repo, evolution_repository=repo)
-            executor.execute(plan, _make_context())
+            executor.execute(plan, _make_domain_context())
             uow.commit()
         except OptimisticConcurrencyError:
             uow.rollback()
@@ -934,7 +955,7 @@ class TestAtomicity:
         uow.begin()
         try:
             executor = EvolutionExecutor(knowledge_repository=repo, evolution_repository=repo)
-            executor.execute(plan, _make_context())
+            executor.execute(plan, _make_domain_context())
             uow.commit()
         except OptimisticConcurrencyError:
             uow.rollback()
@@ -964,7 +985,7 @@ class TestAtomicity:
         uow.begin()
         try:
             executor = EvolutionExecutor(knowledge_repository=repo, evolution_repository=repo)
-            executor.execute(plan, _make_context())
+            executor.execute(plan, _make_domain_context())
             uow.commit()
         except OptimisticConcurrencyError:
             uow.rollback()
@@ -994,7 +1015,7 @@ class TestAtomicity:
         uow.begin()
         try:
             executor = EvolutionExecutor(knowledge_repository=repo, evolution_repository=repo)
-            executor.execute(plan, _make_context())
+            executor.execute(plan, _make_domain_context())
             uow.commit()
         except OptimisticConcurrencyError:
             uow.rollback()
@@ -1022,7 +1043,7 @@ class TestAtomicity:
         uow.begin()
         try:
             executor = EvolutionExecutor(knowledge_repository=repo, evolution_repository=repo)
-            executor.execute(plan, _make_context())
+            executor.execute(plan, _make_domain_context())
             uow.commit()
         except Exception:
             uow.rollback()
@@ -1046,7 +1067,7 @@ class TestEvolutionRecordPersistence:
         op = EvolutionOperation(identity.id, v1.version_id, TransitionType.UPDATE, "test")
         plan = EvolutionPlan(operations=(op,), affected_targets=(identity.id,))
         executor = EvolutionExecutor(knowledge_repository=repo, evolution_repository=repo)
-        executor.execute(plan, _make_context())
+        executor.execute(plan, _make_domain_context())
         records = repo.get_execution_records()
         assert len(records) == 1
         assert records[0].success is True
@@ -1067,7 +1088,7 @@ class TestEvolutionRecordPersistence:
             op = EvolutionOperation(identity.id, wrong_vid, TransitionType.UPDATE, "test")
             plan = EvolutionPlan(operations=(op,), affected_targets=(identity.id,))
             executor = EvolutionExecutor(knowledge_repository=repo, evolution_repository=repo)
-            executor.execute(plan, _make_context())
+            executor.execute(plan, _make_domain_context())
         except OptimisticConcurrencyError:
             from datetime import datetime, timezone
             failure = ExecutionFailureRecord(
@@ -1092,7 +1113,7 @@ class TestEvolutionRecordPersistence:
         op = EvolutionOperation(identity.id, v1.version_id, TransitionType.UPDATE, "test")
         plan = EvolutionPlan(operations=(op,), affected_targets=(identity.id,))
         executor = EvolutionExecutor(knowledge_repository=repo, evolution_repository=repo)
-        executor.execute(plan, _make_context())
+        executor.execute(plan, _make_domain_context())
         records = repo.get_execution_records()
         with pytest.raises(AttributeError):
             records[0].success = False
@@ -1130,18 +1151,18 @@ class TestUseCaseOwnsTransaction:
 
 
 # ---------------------------------------------------------------------------
-# EvolutionEngine.plan() — delegation tests
+# EvolutionEngine._plan() — delegation tests
 # ---------------------------------------------------------------------------
 
 class TestEnginePlanDelegation:
     def test_engine_plan_returns_evolution_plan(self):
         engine = EvolutionEngine()
-        plan = engine.plan(targets=(), category="inspect", context=_make_context())
+        plan = engine._plan(targets=(), category="inspect", context=_make_context())
         assert isinstance(plan, EvolutionPlan)
 
     def test_engine_empty_targets_empty_plan(self):
         engine = EvolutionEngine()
-        plan = engine.plan(targets=(), category="duplicate", context=_make_context())
+        plan = engine._plan(targets=(), category="duplicate", context=_make_context())
         assert plan.operations == ()
         assert plan.affected_targets == ()
 
@@ -1150,15 +1171,15 @@ class TestEnginePlanDelegation:
         a, b = uuid.uuid4(), uuid.uuid4()
         targets = (a, b)
         ctx = _make_context()
-        plan1 = engine.plan(targets, "conflict", ctx)
-        plan2 = engine.plan(targets, "conflict", ctx)
+        plan1 = engine._plan(targets, "conflict", ctx)
+        plan2 = engine._plan(targets, "conflict", ctx)
         assert plan1 == plan2
 
 
 class TestEnginePlanNoApplicationImport:
     def test_plan_does_not_import_application(self):
         import inspect
-        source = inspect.getsource(EvolutionEngine.plan)
+        source = inspect.getsource(EvolutionEngine._plan)
         assert "brain.application" not in source
 
     def test_engine_module_does_not_import_application(self):

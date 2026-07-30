@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import pytest
 
 from brain.application.brain_service import BrainService
+from brain.application.usecases.models import KnowledgeVersionDTO, PlanningRequest
 from brain.domain.enums import KnowledgeType, LifecycleState
 from brain.domain.references import Evidence, Relationship
 from brain.domain.task import Priority, Task, TaskType
@@ -114,7 +115,8 @@ class TestLearnSuccess:
         candidate = make_candidate()
         version = service.learn(candidate)
 
-        assert version.knowledge_type == KnowledgeType.DECISION
+        assert isinstance(version, KnowledgeVersionDTO)
+        assert version.knowledge_type == KnowledgeType.DECISION.value
         assert version.title == "Test Title"
         assert version.version_number == 1
 
@@ -131,7 +133,7 @@ class TestLearnSuccess:
         candidate = make_candidate()
         version = service.learn(candidate)
 
-        assert isinstance(version, KnowledgeVersion)
+        assert isinstance(version, KnowledgeVersionDTO)
 
 
 class TestLearnValidationFailure:
