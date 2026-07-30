@@ -35,6 +35,14 @@ from brain.domain.problem import (
     HypothesisSpace,
     ProblemStatement,
 )
+from brain.domain.proposal import (
+    ProposalCategory,
+    RiskLevel,
+    ProposalComplexity,
+    ProposalState,
+    Proposal,
+    ProposalSpace,
+)
 
 __all__ = [
     "KnowledgeType",
@@ -67,4 +75,10 @@ __all__ = [
     "Hypothesis",
     "HypothesisSpace",
     "ProblemStatement",
+    "ProposalCategory",
+    "RiskLevel",
+    "ProposalComplexity",
+    "ProposalState",
+    "Proposal",
+    "ProposalSpace",
 ]
