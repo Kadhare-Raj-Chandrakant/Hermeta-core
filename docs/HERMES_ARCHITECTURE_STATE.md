@@ -969,6 +969,107 @@ Architecture tests in `tests/architecture/test_governance_architecture.py` verif
 
 ---
 
+## Authorization Constitution (B.6)
+
+### Purpose
+
+B.6 introduces the final constitutional gate before execution: **Authorization**.
+
+> **Governance** answers: *"Is this constitutionally acceptable?"*
+>
+> **Authorization** answers: *"May this constitutionally accepted decision proceed?"*
+>
+> **Execution** (future) answers: *"Perform the authorized action."*
+
+These three responsibilities must never overlap.
+
+### Constitutional Laws (A-1 through A-16)
+
+| Law | Statement |
+|-----|-----------|
+| **A-1** | Authorization consumes GovernanceDecision only. |
+| **A-2** | Authorization owns permission only. |
+| **A-3** | Authorization never evaluates. |
+| **A-4** | Authorization never governs. |
+| **A-5** | Authorization never executes. |
+| **A-6** | Authorization is immutable. |
+| **A-7** | Authorization is deterministic. |
+| **A-8** | Authorization is superseded, never mutated. |
+| **A-9** | Authorization preserves traceability. |
+| **A-10** | Authorization never bypasses Governance. |
+| **A-11** | Authorization never invents permission. |
+| **A-12** | Authorization never authorizes constitutional violations. |
+| **A-13** | Authorization never weakens constitutional policy. |
+| **A-14** | Authorization lifecycle is independent from execution lifecycle. |
+| **A-15** | Execution consumes AuthorizationToken only. |
+| **A-16** | Authorization contains no execution metadata. |
+
+### Domain Models (B.6)
+
+All models reside in `brain/domain/authorization/` — pure domain layer with **zero dependencies** on application, runtime, adapters, repositories, infrastructure, or engines.
+
+| Model | Purpose | Contains | Does NOT Contain |
+|-------|---------|----------|------------------|
+| `AuthorizationRecord` | Immutable constitutional permission | authorization_id, governance_decision_id, state, rationale_id, issued_at, constitutional_version, superseded_by | execution metadata, runtime references, scheduling, retries, workflow state, repository references, planning information |
+| `AuthorizationContext` | Immutable evaluation context for authorization | governance_decision_id, policy_ids, constitutional_version, metadata, created_at | runtime state, repository data, execution context, optimization data, external systems |
+| `AuthorizationHistory` | Immutable append-only history | history_id, authorization_record_ids, constitutional_version, created_at | overwrite capability, mutation methods, authorize(), latest(), activate(), execute() |
+| `AuthorizationConstraint` | Declarative constitutional restriction | constraint_id, constraint_type, description, policy_ids, created_at | execution logic, mutation commands |
+| `AuthorizationRationale` | WHY permission granted/denied | rationale_id, explanation, supporting_findings, supporting_constraint_ids, constitutional_basis, created_at | authority, permission state |
+| `AuthorizationToken` | Constitutional artifact for Execution | token_id, authorization_record_id, issued_at, constitutional_version | execution metadata, scheduling, retries, workflow state |
+
+### Authorization States
+
+| State | Meaning |
+|-------|---------|
+| `AUTHORIZED` | Permission granted |
+| `DENIED` | Permission denied |
+| `REQUIRES_REVIEW` | Awaiting human/constitutional review |
+| `INSUFFICIENT_EVIDENCE` | Not enough evidence to decide |
+| `EXPIRED` | Authorization has expired |
+| `WITHDRAWN` | Authorization withdrawn |
+| `SUPERSEDED` | Replaced by newer authorization |
+
+**Execution states do NOT belong here.**
+
+### Separation Guarantees
+
+| Separation | Enforced By |
+|------------|-------------|
+| `AuthorizationRecord` ≠ `Evaluation` | Different modules; no cross-imports; A-3 tests |
+| `AuthorizationRecord` ≠ `GovernanceDecision` | Different modules; no cross-imports; A-4 tests |
+| `AuthorizationRecord` ≠ `Execution` | No execution fields; no imports; A-5/A-14/A-15/A-16 tests |
+| `AuthorizationRecord` ≠ `AuthorizationRationale` | Separate models; authority vs reasoning; separation tests |
+| `AuthorizationConstraint` ≠ Execution | No execution logic; declarative only; A-12 tests |
+| `AuthorizationHistory` ≠ Mutation | Append-only via `with_record`; A-8 tests |
+| `AuthorizationToken` ≠ Execution | No execution metadata; A-15/A-16 tests |
+
+### B.6 Test Coverage
+
+Architecture tests in `tests/architecture/test_authorization_architecture.py` verify:
+
+- Domain purity: 0 forbidden imports (A-1, A-2, A-3, A-4, A-5)
+- Immutable design: 0 mutation methods, all frozen dataclasses (A-6, A-7, A-8)
+- No Evaluation/Governance/Execution logic (A-3, A-4, A-5)
+- Authorization owns permission only: no execution/scheduling/workflow fields (A-2, A-14, A-16)
+- Traceability preserved: governance_decision_id, policy_ids, constitutional_version (A-9)
+- Never bypasses Governance: requires governance_decision_id (A-10)
+- Never invents permission: no creation fields (A-11)
+- Never authorizes violations: Constraint model with policy_ids (A-12)
+- Never weakens policy: Context/Constraint require policy_ids (A-13)
+- Lifecycle independent from Execution: no execution states (A-14)
+- Token minimal: no execution metadata (A-15, A-16)
+- Immutable: all models frozen (A-6, A-7, A-8)
+- Supersession not mutation: superseded_by field, append-only history (A-8)
+- No execution states in enum: no EXECUTING, RUNNING, etc. (A-14)
+- Token minimal: no execution metadata (A-15, A-16)
+- Dependency direction: Governance → Authorization → Execution (never reversed)
+
+**Total: 28 new architecture tests — ALL PASS**
+
+**B.6 Implementation: COMPLETE — Authorization & Constitutional Permission foundation established.**
+
+---
+
 ## Phase B Milestones (Planned)
 
 | Milestone | Scope | Status |
@@ -979,5 +1080,5 @@ Architecture tests in `tests/architecture/test_governance_architecture.py` verif
 | **B.3** | Proposal Generation — creating improvement proposals | ✅ COMPLETE |
 | **B.4** | Proposal Evaluation — analyzing and approving proposals | ✅ COMPLETE |
 | **B.5** | Governance & Constitutional Decision — constitutional authority | ✅ COMPLETE |
-| **B.6** | Execution & Verification — running approved evolutions | ⏳ PLANNED |
+| **B.6** | Authorization & Constitutional Permission — final gate before execution | ✅ COMPLETE |
 | **B.7** | Constitutional Amendment Process — changing constitutional laws | ⏳ PLANNED |

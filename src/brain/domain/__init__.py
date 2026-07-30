@@ -65,6 +65,16 @@ from brain.domain.governance import (
     GovernanceRationale,
     GovernanceFinding,
 )
+from brain.domain.authorization import (
+    AuthorizationState,
+    ConstraintType,
+    AuthorizationRecord,
+    AuthorizationContext,
+    AuthorizationHistory,
+    AuthorizationConstraint,
+    AuthorizationRationale,
+    AuthorizationToken,
+)
 
 __all__ = [
     "KnowledgeType",
@@ -121,4 +131,12 @@ __all__ = [
     "GovernancePolicy",
     "GovernanceRationale",
     "GovernanceFinding",
+    "AuthorizationState",
+    "ConstraintType",
+    "AuthorizationRecord",
+    "AuthorizationContext",
+    "AuthorizationHistory",
+    "AuthorizationConstraint",
+    "AuthorizationRationale",
+    "AuthorizationToken",
 ]
