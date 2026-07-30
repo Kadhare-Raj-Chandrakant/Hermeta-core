@@ -19,6 +19,14 @@ from brain.domain.evolution_domain import (
     EvolutionDecision,
     EvolutionRecord,
 )
+from brain.domain.observation import (
+    ObservationSignal,
+    SignalCategory,
+    ObservationEvidence,
+    SystemObservation,
+    ObservationCategory,
+    ObservationSnapshot,
+)
 
 __all__ = [
     "KnowledgeType",
@@ -39,4 +47,10 @@ __all__ = [
     "EvolutionEvaluation",
     "EvolutionDecision",
     "EvolutionRecord",
+    "ObservationSignal",
+    "SignalCategory",
+    "ObservationEvidence",
+    "SystemObservation",
+    "ObservationCategory",
+    "ObservationSnapshot",
 ]

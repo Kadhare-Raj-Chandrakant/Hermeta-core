@@ -548,6 +548,86 @@ Domain-level tests in `tests/architecture/` verify:
 
 ---
 
+## Self Observation Architecture (B.1)
+
+### Purpose
+
+B.1 introduces the first capability required for controlled evolution: **Self Observation**.
+
+> **Self Observation** = Hermes can represent observations about its own internal state.
+>
+> It answers: *"What is happening inside me?"*
+>
+> It does NOT answer: *"What should I change?"*
+
+### Constitutional Principles
+
+| Principle | Statement |
+|-----------|-----------|
+| **Observation ≠ Proposal** | A finding is a discovered signal, not a solution. |
+| **Observation ≠ Evaluation** | Evidence supports observation; it does not interpret meaning. |
+| **Observation ≠ Decision** | Observations contain no recommendations, decisions, or solutions. |
+| **Observation ≠ Mutation** | Observation objects describe state; they never mutate components. |
+
+### Self Observation Laws (New)
+
+| Law | Statement |
+|-----|-----------|
+| **O-1** | Observation describes facts only. No recommendations, decisions, or solutions. |
+| **O-2** | Observation contains no decisions. No `should_change`, `recommended_action`, `solution`. |
+| **O-3** | Observation contains no decisions. No `decision`, `proposal`, `evaluation`. |
+| **O-4** | Observation cannot mutate observed systems. No `create`, `update`, `execute`, `run` methods. |
+| **O-5** | Evidence and interpretation remain separate. ObservationEvidence supports; it does not interpret. |
+| **O-6** | Observation does not create EvolutionProposal objects. Separation enforced by architecture tests. |
+
+### Domain Models (B.1)
+
+All models reside in `brain/domain/observation/` — pure domain layer with **zero dependencies** on application, runtime, adapters, repositories, infrastructure, or engines.
+
+| Model | Purpose | Contains | Does NOT Contain |
+|-------|---------|----------|------------------|
+| `ObservationSignal` | One measured fact | category, source, metric_name, value, unit, timestamp | recommendations, decisions, solutions |
+| `ObservationEvidence` | Why observation exists | description, sample_count, measurement_period, confidence, metadata | interpretation, diagnosis, severity assignment |
+| `SystemObservation` | One self-observation | target, category, signal, evidence, confidence, timestamp | should_change, recommended_action, solution, decision |
+| `ObservationSnapshot` | State at a point in time | timestamp, collection_id, observations | comparison, trends, proposals |
+
+### Observation Categories
+
+| Category | Description |
+|----------|-------------|
+| `OPERATIONAL` | Execution metrics, failure rates, latency, throughput |
+| `COGNITIVE` | Planning depth, reflection finding counts, learning acceptance rates |
+| `EVOLUTION_HISTORY` | Evolution attempt counts, approval/rejection ratios, quarantine status |
+
+**Categories describe ORIGIN only** — not severity, urgency, or required action.
+
+### Separation Guarantees
+
+| Separation | Enforced By |
+|------------|-------------|
+| `SystemObservation` ≠ `EvolutionProposal` | Different modules; no cross-imports; architecture tests |
+| `SystemObservation` ≠ `ReflectionFinding` | Different modules; no cross-imports; architecture tests |
+| `ObservationEvidence` ≠ Interpretation | No `interpret`, `diagnose`, `analyze`, `recommend` methods; tests verify |
+| `ObservationSnapshot` ≠ Analysis | No `compare`, `trend`, `detect`, `calculate` methods; tests verify |
+
+### B.1 Test Coverage
+
+Architecture tests in `tests/architecture/test_observation_architecture.py` verify:
+
+- Domain purity: 0 forbidden imports (O-1)
+- Read-only design: 0 mutation methods (O-2, O-3, O-4)
+- Evidence/interpretation separation: 0 interpretation methods (O-5)
+- Evolution separation: 0 EvolutionProposal references (O-6)
+- Reflection separation: 0 reflection imports
+- Category constraints: no action-oriented category names
+- Snapshot constraints: no analysis methods
+
+**Total: 10 new architecture tests — ALL PASS**
+
+**B.1 Implementation: COMPLETE — Self Observation foundation established.**
+
+---
+
 ## Phase B Milestones (Planned)
 
 | Milestone | Scope | Status |
