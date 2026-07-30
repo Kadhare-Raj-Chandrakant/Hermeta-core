@@ -698,6 +698,85 @@ Architecture tests in `tests/architecture/test_problem_architecture.py` verify:
 
 ---
 
+## Proposal Generation Constitution (B.3)
+
+### Purpose
+
+B.3 introduces the missing cognitive layer between Problem Statement and Evaluation.
+
+> **Problem Statement → Proposal Space → Candidate Proposals**
+
+This milestone defines the domain vocabulary for candidate improvements. It does NOT decide whether any proposal is good — that belongs to B.4.
+
+### Constitutional Laws (P-1 through P-12)
+
+| Law | Statement |
+|-----|-----------|
+| **P-1** | A Proposal is an idea, not a decision. It never indicates approval, rejection, acceptance, or recommendation. |
+| **P-2** | Proposal expresses intent, not implementation. *Good:* "Improve retrieval prioritization." *Bad:* "Modify RetrievalEngine.score_documents()". No code-level details. No implementation strategies. |
+| **P-3** | Proposal never evaluates itself. Forbidden: score, confidence, priority, ranking, severity, probability, usefulness. |
+| **P-4** | Proposal never mutates Hermes. No execution. No repository mutation. No runtime behavior. |
+| **P-5** | Proposal remains completely traceable. Every Proposal preserves references back: Observation → Hypothesis Space → Problem Statement → Proposal. Traceability is immutable. |
+| **P-6** | Proposal preserves uncertainty. A Proposal represents *one possible improvement*. Never *the* improvement. |
+| **P-7** | ProposalSpace owns alternatives. Multiple proposals may coexist. ProposalSpace never ranks, removes, filters, merges, or optimizes. |
+| **P-8** | Proposal generation is creative. Evaluation is analytical. These are different cognitive responsibilities. No evaluation logic may appear anywhere. |
+| **P-9** | Proposal is unaware of Evaluation. Proposal must not reference Evaluation, Decision, Approval, Execution, or Governance. No imports. No fields. No methods. |
+| **P-10** | Proposal describes desired outcome. Not implementation mechanism. *Good:* "Reduce repeated computation." *Bad:* "Add LRU cache." |
+| **P-11** | Proposal categories represent cognitive intent. Examples: Knowledge Improvement, Learning Improvement, Planning Improvement, Retrieval Improvement, Reflection Improvement, Evolution Improvement, Safety Improvement, Reliability Improvement, Performance Improvement, Explainability Improvement. Avoid implementation-oriented categories. |
+| **P-12** | Proposal models are immutable domain objects. No mutation methods. No execution methods. No runtime behavior. |
+
+### Domain Models (B.3)
+
+All models reside in `brain/domain/proposal/` — pure domain layer with **zero dependencies** on application, runtime, adapters, repositories, infrastructure, or engines.
+
+| Model | Purpose | Contains | Does NOT Contain |
+|-------|---------|----------|------------------|
+| `Proposal` | One candidate improvement | identity, title, description, category, state, originating_problem_id, hypothesis_space_id, observation_ids, rationale, assumptions, intended_outcomes, created_at | score, confidence, ranking, approval, execution, implementation details, repository references |
+| `ProposalSpace` | All candidate proposals for a ProblemStatement | space_id, problem_statement_id, proposals, created_at | ranking, filtering, merging, optimization |
+| `ProposalCategory` | Cognitive intent of improvement | KNOWLEDGE_IMPROVEMENT, LEARNING_IMPROVEMENT, PLANNING_IMPROVEMENT, RETRIEVAL_IMPROVEMENT, REFLECTION_IMPROVEMENT, EVOLUTION_IMPROVEMENT, SAFETY_IMPROVEMENT, RELIABILITY_IMPROVEMENT, PERFORMANCE_IMPROVEMENT, EXPLAINABILITY_IMPROVEMENT | implementation-oriented categories |
+| `ProposalAssumption` | Assumptions under which proposal may be useful | assumption_id, description, category, created_at | evaluation, confidence, prediction |
+| `ProposalOutcome` | Intended cognitive outcome | outcome_id, description, category, created_at | guarantee, metrics, implementation mechanism |
+
+### Enums (B.3)
+
+| Enum | Values | Purpose |
+|------|--------|---------|
+| `ProposalCategory` | KNOWLEDGE_IMPROVEMENT, LEARNING_IMPROVEMENT, PLANNING_IMPROVEMENT, RETRIEVAL_IMPROVEMENT, REFLECTION_IMPROVEMENT, EVOLUTION_IMPROVEMENT, SAFETY_IMPROVEMENT, RELIABILITY_IMPROVEMENT, PERFORMANCE_IMPROVEMENT, EXPLAINABILITY_IMPROVEMENT | Classify cognitive intent |
+| `ProposalState` | GENERATED, IN_SPACE, WITHDRAWN | Lifecycle position only — NOT approval/rejection |
+| `ProposalComplexity` | LOW, MEDIUM, HIGH | Cognitive complexity only — NOT timeline/cost |
+
+### Separation Guarantees
+
+| Separation | Enforced By |
+|------------|-------------|
+| `Proposal` ≠ `EvolutionProposal` | Different modules; no cross-imports; architecture tests |
+| `Proposal` ≠ `EvolutionEvaluation` | No evaluation fields; no imports; P-3/P-8/P-9 tests |
+| `Proposal` ≠ `EvolutionDecision` | No decision fields; no imports; P-3/P-8/P-9 tests |
+| `Proposal` ≠ `EvolutionExecution` | No execution fields; no imports; P-3/P-4/P-9 tests |
+| `ProposalSpace` ≠ Evaluation | No rank, evaluate, choose methods; container-only tests |
+| `Proposal` ≠ Implementation | No code-level details; intent-only categories; P-2/P-10 tests |
+
+### B.3 Test Coverage
+
+Architecture tests in `tests/architecture/test_proposal_architecture.py` verify:
+
+- Domain purity: 0 forbidden imports (P-1, P-3, P-4, P-8, P-12)
+- Read-only design: 0 mutation/execution/recommendation methods (P-2, P-3, P-4, P-9, P-12)
+- No self-evaluation fields: 0 score/confidence/ranking/approval fields (P-3)
+- No mutation/execution references (P-4)
+- Traceability chain preserved: originating_problem_id, hypothesis_space_id, observation_ids (P-5)
+- ProposalSpace is container-only: 0 ranking/filtering/merging methods (P-7)
+- No Evaluation/Decision/Execution references (P-8, P-9)
+- Proposal describes intent: intended_outcomes field exists (P-10)
+- Categories represent cognitive intent: no implementation-oriented names (P-11)
+- Observation independence preserved (P-6)
+
+**Total: 14 new architecture tests — ALL PASS**
+
+**B.3 Implementation: COMPLETE — Proposal Generation foundation established.**
+
+---
+
 ## Phase B Milestones (Planned)
 
 | Milestone | Scope | Status |
@@ -705,7 +784,7 @@ Architecture tests in `tests/architecture/test_problem_architecture.py` verify:
 | **B.0** | Evolution Constitution Foundation | ✅ COMPLETE |
 | **B.1** | Self Observation — detecting evolution opportunities | ✅ COMPLETE |
 | **B.2** | Hypothesis & Problem Formulation — representing cognitive gaps | ✅ COMPLETE |
-| **B.3** | Proposal Generation — creating improvement proposals | ⏳ PLANNED |
+| **B.3** | Proposal Generation — creating improvement proposals | ✅ COMPLETE |
 | **B.4** | Evaluation & Decision — analyzing and approving proposals | ⏳ PLANNED |
 | **B.5** | Execution & Verification — running approved evolutions | ⏳ PLANNED |
 | **B.6** | Constitutional Amendment Process — changing constitutional laws | ⏳ PLANNED |
