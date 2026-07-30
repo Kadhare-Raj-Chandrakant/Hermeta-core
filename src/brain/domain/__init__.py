@@ -43,6 +43,16 @@ from brain.domain.proposal import (
     Proposal,
     ProposalSpace,
 )
+from brain.domain.evaluation import (
+    EvaluationDimension,
+    EvidenceType,
+    EvaluationState,
+    Evaluation,
+    EvaluationSpace,
+    Tradeoff,
+    EvaluationEvidence,
+    DimensionalAnalysis,
+)
 
 __all__ = [
     "KnowledgeType",
@@ -81,4 +91,12 @@ __all__ = [
     "ProposalState",
     "Proposal",
     "ProposalSpace",
+    "EvaluationDimension",
+    "EvidenceType",
+    "EvaluationState",
+    "Evaluation",
+    "EvaluationSpace",
+    "Tradeoff",
+    "EvaluationEvidence",
+    "DimensionalAnalysis",
 ]
