@@ -628,13 +628,84 @@ Architecture tests in `tests/architecture/test_observation_architecture.py` veri
 
 ---
 
+## Hypothesis & Problem Formulation Constitution (B.2)
+
+### Purpose
+
+B.2 introduces the missing cognitive layer between Observation and Proposal.
+
+> **Observation → Hypothesis Space → Hypothesis Candidates → Problem Statement**
+
+This milestone defines WHAT Hermes can think about, not HOW Hermes thinks.
+
+### Constitutional Laws (H-1 through H-8)
+
+| Law | Statement |
+|-----|-----------|
+| **H-1** | A Hypothesis is not a solution. It explains observations. It never recommends action. |
+| **H-2** | Multiple hypotheses may originate from the same observations. Hermes must support competing explanations. |
+| **H-3** | A ProblemStatement may reference multiple hypotheses. Problems are derived understanding, not raw evidence. |
+| **H-4** | Observations remain immutable regardless of later conclusions. Changing a hypothesis must never modify observations. |
+| **H-5** | Problems never contain implementation strategies. Forbidden: `replace planner`, `modify retrieval`, `execute evolution`, `improve scoring`. Allowed: `planning quality degradation`, `retrieval inconsistency`, `execution instability`. |
+| **H-6** | Hypotheses never contain execution information. No mutation, execution, planner instructions, governance. |
+| **H-7** | Problem formulation remains independent from Proposal generation. No Proposal references. No Evaluation references. No Decision references. |
+| **H-8** | Every ProblemStatement must preserve traceability back to its supporting observations through hypotheses. |
+
+### Domain Models (B.2)
+
+All models reside in `brain/domain/problem/` — pure domain layer with **zero dependencies** on application, runtime, adapters, repositories, infrastructure, or engines.
+
+| Model | Purpose | Contains | Does NOT Contain |
+|-------|---------|----------|------------------|
+| `Hypothesis` | One possible explanation for observations | id, title, description, confidence, supporting_observation_ids, category, created_at | recommendation, execution, mutation, approval, decision |
+| `HypothesisSpace` | Collection of competing hypotheses for same observations | space_id, observation_ids, hypotheses, created_at | ranking, evaluation, winner selection |
+| `ProblemStatement` | Formally defined cognitive gap | problem_id, title, description, category, severity, observation_ids, hypothesis_space_id, affected_targets, created_at | solution, recommendation, implementation plan, proposal references |
+
+### Enums (B.2)
+
+| Enum | Values | Purpose |
+|------|--------|---------|
+| `HypothesisCategory` | CAUSAL, CORRELATIONAL, STRUCTURAL, BEHAVIORAL, ENVIRONMENTAL, UNKNOWN | Classify explanation type |
+| `ProblemCategory` | PLANNING, KNOWLEDGE, RETRIEVAL, LEARNING, EVOLUTION, PERFORMANCE, RELIABILITY, ARCHITECTURE, OPERATIONAL | Classify cognitive domain of gap |
+| `ProblemSeverity` | NEGLIGIBLE, LOW, MEDIUM, HIGH, CRITICAL | Represent observed impact only — NOT execution priority |
+
+### Separation Guarantees
+
+| Separation | Enforced By |
+|------------|-------------|
+| `Hypothesis` ≠ `EvolutionProposal` | Different modules; no cross-imports; architecture tests |
+| `ProblemStatement` ≠ `EvolutionProposal` | No proposal_id, evaluation_id, decision_id fields; H-7 tests |
+| `HypothesisSpace` ≠ Evaluation | No rank, evaluate, choose methods; container-only tests |
+| `ProblemStatement` ≠ Implementation | No solution, recommendation, strategy fields; H-5 tests |
+| `Observation` immutability | Observation IDs are UUIDs; never modified by hypotheses; H-4 tests |
+
+### B.2 Test Coverage
+
+Architecture tests in `tests/architecture/test_problem_architecture.py` verify:
+
+- Domain purity: 0 forbidden imports (H-1, H-6, H-7)
+- Read-only design: 0 mutation/execution/recommendation methods (H-1, H-4, H-6, H-7)
+- No Proposal/Evaluation/Decision references (H-7)
+- No implementation strategy fields (H-5)
+- Traceability fields exist (H-8)
+- Category/Severity are descriptive only (H-5)
+- HypothesisSpace is container-only (H-2)
+- Observation independence preserved (H-4)
+
+**Total: 18 new architecture tests — ALL PASS**
+
+**B.2 Implementation: COMPLETE — Hypothesis & Problem Formulation foundation established.**
+
+---
+
 ## Phase B Milestones (Planned)
 
 | Milestone | Scope | Status |
 |-----------|-------|--------|
 | **B.0** | Evolution Constitution Foundation | ✅ COMPLETE |
-| **B.1** | Self Observation — detecting evolution opportunities | ⏳ PLANNED |
-| **B.2** | Proposal Generation — creating improvement proposals | ⏳ PLANNED |
-| **B.3** | Evaluation & Decision — analyzing and approving proposals | ⏳ PLANNED |
-| **B.4** | Execution & Verification — running approved evolutions | ⏳ PLANNED |
-| **B.5** | Constitutional Amendment Process — changing constitutional laws | ⏳ PLANNED |
+| **B.1** | Self Observation — detecting evolution opportunities | ✅ COMPLETE |
+| **B.2** | Hypothesis & Problem Formulation — representing cognitive gaps | ✅ COMPLETE |
+| **B.3** | Proposal Generation — creating improvement proposals | ⏳ PLANNED |
+| **B.4** | Evaluation & Decision — analyzing and approving proposals | ⏳ PLANNED |
+| **B.5** | Execution & Verification — running approved evolutions | ⏳ PLANNED |
+| **B.6** | Constitutional Amendment Process — changing constitutional laws | ⏳ PLANNED |

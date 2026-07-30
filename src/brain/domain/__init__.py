@@ -27,6 +27,14 @@ from brain.domain.observation import (
     ObservationCategory,
     ObservationSnapshot,
 )
+from brain.domain.problem import (
+    HypothesisCategory,
+    ProblemCategory,
+    ProblemSeverity,
+    Hypothesis,
+    HypothesisSpace,
+    ProblemStatement,
+)
 
 __all__ = [
     "KnowledgeType",
@@ -53,4 +61,10 @@ __all__ = [
     "SystemObservation",
     "ObservationCategory",
     "ObservationSnapshot",
+    "HypothesisCategory",
+    "ProblemCategory",
+    "ProblemSeverity",
+    "Hypothesis",
+    "HypothesisSpace",
+    "ProblemStatement",
 ]
