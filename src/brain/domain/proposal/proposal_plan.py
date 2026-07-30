@@ -1,63 +1,8 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from enum import Enum
 import uuid
 
-
-class ProposalCategory(Enum):
-    """
-    Categories describe the TYPE of improvement a proposal represents.
-
-    They do NOT represent:
-    - Severity
-    - Priority
-    - Implementation effort
-    - Risk level
-    """
-
-    ARCHITECTURAL = "architectural"
-    ALGORITHMIC = "algorithmic"
-    DATA_FLOW = "data_flow"
-    INTERFACE = "interface"
-    CONFIGURATION = "configuration"
-    PERFORMANCE = "performance"
-    RELIABILITY = "reliability"
-    MAINTAINABILITY = "maintainability"
-    SECURITY = "security"
-
-
-class RiskLevel(Enum):
-    """
-    Risk levels represent POTENTIAL IMPACT of proposal execution.
-
-    They do NOT represent:
-    - Execution priority
-    - Governance urgency
-    - Resource allocation
-    """
-
-    NEGLIGIBLE = "negligible"
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
-    CRITICAL = "critical"
-
-
-class ExecutionComplexity(Enum):
-    """
-    Complexity of executing the proposal.
-
-    Does NOT represent:
-    - Timeline
-    - Cost
-    - Staffing
-    """
-
-    TRIVIAL = "trivial"
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
-    EXTREME = "extreme"
+from brain.domain.proposal.enums import ProposalCategory, RiskLevel
 
 
 @dataclass(frozen=True)
