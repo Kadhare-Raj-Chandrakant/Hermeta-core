@@ -75,6 +75,16 @@ from brain.domain.authorization import (
     AuthorizationRationale,
     AuthorizationToken,
 )
+from brain.domain.execution import (
+    ExecutionStatus,
+    ArtifactType,
+    FailureType,
+    ExecutionPlan,
+    ExecutionResult,
+    ExecutionReceipt,
+    ExecutionHistory,
+    ExecutionContext,
+)
 
 __all__ = [
     "KnowledgeType",
@@ -139,4 +149,14 @@ __all__ = [
     "AuthorizationConstraint",
     "AuthorizationRationale",
     "AuthorizationToken",
+    "ExecutionStatus",
+    "ArtifactType",
+    "FailureType",
+    "ExecutionPlan",
+    "ExecutionContext",
+    "ExecutionResult",
+    "ExecutionArtifact",
+    "ExecutionFailure",
+    "ExecutionHistory",
+    "ExecutionReceipt",
 ]
