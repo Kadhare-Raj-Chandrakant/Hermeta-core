@@ -16,10 +16,10 @@ class HypothesisSpace:
     from observations through hypotheses.
     """
 
-    space_id: uuid.UUID = uuid.uuid4()
+    space_id: uuid.UUID
+    created_at: datetime
     observation_ids: tuple[uuid.UUID, ...] = field(default_factory=tuple)
     hypotheses: tuple[Hypothesis, ...] = field(default_factory=tuple)
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def __post_init__(self) -> None:
         if not self.observation_ids:

@@ -15,7 +15,8 @@ class DimensionalAnalysis:
     It is structured reasoning about how the proposal relates to one dimension.
     """
 
-    analysis_id: uuid.UUID = uuid.uuid4()
+    analysis_id: uuid.UUID
+    created_at: datetime
     dimension: EvaluationDimension = EvaluationDimension.ARCHITECTURAL_INTEGRITY
     # Facts: objective statements about the proposal
     facts: tuple[str, ...] = field(default_factory=tuple)
@@ -25,7 +26,6 @@ class DimensionalAnalysis:
     evidence: tuple[uuid.UUID, ...] = field(default_factory=tuple)
     # Tradeoffs specific to this dimension
     tradeoff_ids: tuple[uuid.UUID, ...] = field(default_factory=tuple)
-    created_at: datetime = datetime.now(timezone.utc)
 
     def __post_init__(self) -> None:
         pass  # No validation required - empty is valid

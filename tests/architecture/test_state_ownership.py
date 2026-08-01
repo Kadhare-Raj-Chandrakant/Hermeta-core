@@ -370,7 +370,7 @@ class TestRepositoryStateOwnership:
         file_path = src_root / "brain" / "repositories" / "memory.py"
         class_attrs = self._get_class_attributes(file_path, "InMemoryKnowledgeRepository")
         # These are the expected storage structures
-        allowed = {"_identities", "_versions", "_transitions", "_conflicts", "_execution_records"}
+        allowed = {"_identities", "_versions", "_transitions", "_conflicts", "_execution_records", "_lock"}
         unexpected = class_attrs - allowed
         violations = [f"InMemoryKnowledgeRepository.{attr}" for attr in unexpected]
         msg = _violation_msg(violations, "Repositories", "5")

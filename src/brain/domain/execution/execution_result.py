@@ -24,10 +24,10 @@ class ExecutionResult:
     - X-17: ExecutionResult contains only observable facts.
     """
 
-    execution_result_id: uuid.UUID = uuid.uuid4()
-    execution_plan_id: uuid.UUID = uuid.uuid4()
+    execution_result_id: uuid.UUID
+    execution_plan_id: uuid.UUID
+    authorization_token_id: uuid.UUID
     status: str = "pending"  # ExecutionStatus value
-    authorization_token_id: uuid.UUID = uuid.uuid4()
 
     # Observable facts only
     artifacts_produced: tuple = ()

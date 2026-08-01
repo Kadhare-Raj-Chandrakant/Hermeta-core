@@ -18,10 +18,10 @@ class ExecutionContext:
     - Optimization data
     """
 
-    execution_plan_id: uuid.UUID = uuid.uuid4()
-    authorization_token_id: uuid.UUID = uuid.uuid4()
-    constitutional_version: str = ""
-    created_at: datetime = datetime.now(timezone.utc)
+    execution_plan_id: uuid.UUID
+    authorization_token_id: uuid.UUID
+    constitutional_version: str
+    created_at: datetime
 
     def __post_init__(self) -> None:
         if not self.constitutional_version.strip():

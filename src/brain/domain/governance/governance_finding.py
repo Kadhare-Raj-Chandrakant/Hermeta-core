@@ -14,13 +14,13 @@ class GovernanceFinding:
     They never mutate anything. They are observations only.
     """
 
-    finding_id: uuid.UUID = uuid.uuid4()
+    finding_id: uuid.UUID
+    created_at: datetime
     title: str = ""
     description: str = ""
     severity: str = "info"  # FindingSeverity value
     policy_ids: tuple = ()
     evidence_ids: tuple = ()
-    created_at: datetime = datetime.now(timezone.utc)
 
     def __post_init__(self) -> None:
         if not self.title.strip():

@@ -17,7 +17,8 @@ class ProblemStatement:
     and no proposal or evaluation references.
     """
 
-    problem_id: uuid.UUID = uuid.uuid4()
+    problem_id: uuid.UUID
+    created_at: datetime
     title: str = ""
     description: str = ""
     category: ProblemCategory = ProblemCategory.OPERATIONAL
@@ -25,7 +26,6 @@ class ProblemStatement:
     observation_ids: tuple[uuid.UUID, ...] = field(default_factory=tuple)
     hypothesis_space_id: Optional[uuid.UUID] = None
     affected_targets: tuple[str, ...] = field(default_factory=tuple)
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def __post_init__(self) -> None:
         if not self.title.strip():

@@ -18,10 +18,10 @@ class ExecutionReceipt:
     - X-23: ExecutionReceipt is an observable fact for future Observation.
     """
 
-    receipt_id: uuid.UUID = uuid.uuid4()
-    execution_result_id: uuid.UUID = uuid.uuid4()
-    authorization_token_id: uuid.UUID = uuid.uuid4()
-    issued_at: datetime = datetime.now(timezone.utc)
+    receipt_id: uuid.UUID
+    execution_result_id: uuid.UUID
+    authorization_token_id: uuid.UUID
+    issued_at: datetime
     constitutional_version: str = "1.0"
 
     # Observable facts recorded

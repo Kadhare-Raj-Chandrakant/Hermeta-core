@@ -6,6 +6,8 @@ from brain.domain.proposal.enums import (
 )
 from brain.domain.proposal.proposal import Proposal
 from brain.domain.proposal.proposal_space import ProposalSpace
+from brain.domain.proposal.assumption import ProposalAssumption
+from brain.domain.proposal.outcome import ProposalOutcome
 
 __all__ = [
     "ProposalCategory",
@@ -14,4 +16,6 @@ __all__ = [
     "ProposalState",
     "Proposal",
     "ProposalSpace",
+    "ProposalAssumption",
+    "ProposalOutcome",
 ]

@@ -15,9 +15,9 @@ class AuthorizationToken:
     It contains no execution metadata.
     """
 
-    token_id: uuid.UUID = uuid.uuid4()
-    authorization_record_id: uuid.UUID = uuid.uuid4()
-    issued_at: datetime = datetime.now(timezone.utc)
+    token_id: uuid.UUID
+    authorization_record_id: uuid.UUID
+    issued_at: datetime
     constitutional_version: str = "1.0"
 
     def __post_init__(self) -> None:

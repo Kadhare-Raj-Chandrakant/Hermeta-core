@@ -26,15 +26,16 @@ class Proposal:
     - P-11: Proposal models are immutable domain objects.
     """
 
-    proposal_id: uuid.UUID = uuid.uuid4()
+    proposal_id: uuid.UUID
+    originating_problem_id: uuid.UUID
+    hypothesis_space_id: uuid.UUID
+    created_at: datetime
     title: str = ""
     description: str = ""
     category: ProposalCategory = ProposalCategory.KNOWLEDGE_IMPROVEMENT
     state: ProposalState = ProposalState.GENERATED
 
     # Traceability chain (P-5)
-    originating_problem_id: uuid.UUID = uuid.uuid4()
-    hypothesis_space_id: uuid.UUID = uuid.uuid4()
     observation_ids: tuple[uuid.UUID, ...] = field(default_factory=tuple)
 
     # Content (P-2, P-9, P-10)
@@ -42,7 +43,6 @@ class Proposal:
     intended_outcomes: tuple[str, ...] = field(default_factory=tuple)
 
     # Metadata
-    created_at: datetime = datetime.now(timezone.utc)
     metadata: tuple[tuple[str, str], ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:

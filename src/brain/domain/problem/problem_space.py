@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from typing import Optional
 import uuid
 
 
@@ -13,9 +14,10 @@ class ProblemSpace:
     of the problem landscape.
     """
 
-    space_id: uuid.UUID = uuid.uuid4()
+    space_id: uuid.UUID
+    created_at: datetime
     problem_ids: tuple[uuid.UUID, ...] = field(default_factory=tuple)
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    hypothesis_space_id: Optional[uuid.UUID] = None
 
     def __post_init__(self) -> None:
         pass
@@ -36,4 +38,5 @@ class ProblemSpace:
             space_id=uuid.uuid4(),
             problem_ids=self.problem_ids + (problem_id,),
             created_at=self.created_at,
+            hypothesis_space_id=self.hypothesis_space_id,
         )

@@ -22,11 +22,11 @@ class ObservationEvidence:
     - Assign severity
     """
 
-    evidence_id: uuid.UUID = uuid.uuid4()
+    evidence_id: uuid.UUID
+    measurement_start: datetime
+    measurement_end: datetime
     description: str = ""
     sample_count: int = 0
-    measurement_start: datetime = datetime.now(timezone.utc)
-    measurement_end: datetime = datetime.now(timezone.utc)
     confidence: float = 0.0
     metadata: tuple[tuple[str, str], ...] = ()
 

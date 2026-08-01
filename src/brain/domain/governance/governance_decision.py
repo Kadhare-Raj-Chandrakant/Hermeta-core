@@ -36,12 +36,12 @@ class GovernanceDecision:
     - G-23: Governance never creates constitutional rules.
     """
 
-    decision_id: uuid.UUID = uuid.uuid4()
-    evaluation_id: uuid.UUID = uuid.uuid4()
+    decision_id: uuid.UUID
+    evaluation_id: uuid.UUID
+    created_at: datetime
+    rationale_id: uuid.UUID
     state: str = "requires_review"  # DecisionState value as string
-    rationale_id: uuid.UUID = uuid.uuid4()
     policy_ids: tuple = ()
-    created_at: datetime = datetime.now(timezone.utc)
     superseded_by: uuid.UUID | None = None
 
     def __post_init__(self) -> None:

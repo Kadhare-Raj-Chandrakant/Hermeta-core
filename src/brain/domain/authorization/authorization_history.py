@@ -18,10 +18,10 @@ class AuthorizationHistory:
     - execute()
     """
 
-    history_id: uuid.UUID = uuid.uuid4()
+    history_id: uuid.UUID
+    created_at: datetime
     authorization_record_ids: tuple = field(default_factory=tuple)
     constitutional_version: str = "1.0"
-    created_at: datetime = datetime.now(timezone.utc)
 
     def __post_init__(self) -> None:
         if not self.constitutional_version.strip():

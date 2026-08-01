@@ -4,6 +4,11 @@ from brain.evolution.evolution_plan import EvolutionPlan
 from brain.evolution.transition_type import TransitionType
 
 
+def _sort_uuids(uuids: tuple) -> tuple:
+    """Sort UUIDs deterministically by their bytes representation."""
+    return tuple(sorted(uuids, key=lambda u: u.bytes))
+
+
 class EvolutionPlanner:
     """Pure planning component with zero infrastructure dependencies.
 
@@ -33,10 +38,10 @@ class EvolutionPlanner:
         category: str,
         context: EvolutionContext,
     ) -> EvolutionPlan:
-        quarantined = tuple(sorted(context.quarantined_targets))
+        quarantined = _sort_uuids(context.quarantined_targets)
         available = tuple(t for t in targets if t not in quarantined)
 
-        ordered = tuple(sorted(available))
+        ordered = _sort_uuids(available)
 
         operations: list[EvolutionOperation] = []
 
@@ -71,7 +76,7 @@ class EvolutionPlanner:
 
         operations.sort(key=lambda op: (op.target_id, op.transition_type.value, op.reason))
 
-        affected = tuple(sorted(set(op.target_id for op in operations)))
+        affected = _sort_uuids(set(op.target_id for op in operations))
         quarantined_count = len(targets) - len(available)
 
         return EvolutionPlan(

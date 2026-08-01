@@ -11,10 +11,10 @@ class ExecutionArtifact:
     Artifacts are pure data containers. They never evaluate themselves.
     """
 
-    artifact_id: uuid.UUID = uuid.uuid4()
+    artifact_id: uuid.UUID
+    created_at: datetime
     artifact_type: str = ""
     reference: str = ""
-    created_at: datetime = datetime.now(timezone.utc)
 
     def __post_init__(self) -> None:
         if not self.artifact_type.strip():

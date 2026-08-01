@@ -20,9 +20,9 @@ class ObservationSnapshot:
     - Generate proposals
     """
 
-    snapshot_id: uuid.UUID = uuid.uuid4()
-    timestamp: datetime = datetime.now(timezone.utc)
-    collection_id: uuid.UUID = uuid.uuid4()
+    snapshot_id: uuid.UUID
+    timestamp: datetime
+    collection_id: uuid.UUID
     observations: tuple[SystemObservation, ...] = ()
 
     def __post_init__(self) -> None:

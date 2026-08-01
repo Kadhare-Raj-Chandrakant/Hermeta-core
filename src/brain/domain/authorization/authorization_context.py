@@ -13,11 +13,11 @@ class AuthorizationContext:
     This context does NOT duplicate the full reasoning chain.
     """
 
-    governance_decision_id: uuid.UUID = uuid.uuid4()
+    governance_decision_id: uuid.UUID
+    created_at: datetime
     policy_ids: tuple = ()
     constitutional_version: str = ""
     metadata: tuple = ()
-    created_at: datetime = datetime.now(timezone.utc)
 
     def __post_init__(self) -> None:
         if not self.constitutional_version.strip():

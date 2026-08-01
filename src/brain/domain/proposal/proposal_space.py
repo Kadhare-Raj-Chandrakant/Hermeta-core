@@ -20,10 +20,10 @@ class ProposalSpace:
     - P-8: ProposalSpace is unaware of Evaluation/Decision/Execution.
     """
 
-    space_id: uuid.UUID = uuid.uuid4()
-    problem_statement_id: uuid.UUID = uuid.uuid4()
+    space_id: uuid.UUID
+    problem_statement_id: uuid.UUID
+    created_at: datetime
     proposals: tuple[Proposal, ...] = field(default_factory=tuple)
-    created_at: datetime = datetime.now(timezone.utc)
 
     def __post_init__(self) -> None:
         if self.problem_statement_id is None:

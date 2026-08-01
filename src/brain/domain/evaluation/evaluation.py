@@ -41,8 +41,9 @@ class Evaluation:
     - mutation methods / execution methods / runtime behavior
     """
 
-    evaluation_id: uuid.UUID = uuid.uuid4()
-    proposal_id: uuid.UUID = uuid.uuid4()
+    evaluation_id: uuid.UUID
+    proposal_id: uuid.UUID
+    created_at: datetime
     state: str = "draft"  # EvaluationState value as string
 
     # Structured reasoning
@@ -56,7 +57,6 @@ class Evaluation:
     # Uncertainties and limitations
     known_uncertainties: tuple[str, ...] = field(default_factory=tuple)
 
-    created_at: datetime = datetime.now(timezone.utc)
     superseded_by: uuid.UUID | None = None  # E-15
 
     def __post_init__(self) -> None:

@@ -43,13 +43,13 @@ class SystemObservation:
     - evaluation / diagnosis
     """
 
-    observation_id: uuid.UUID = uuid.uuid4()
+    observation_id: uuid.UUID
+    timestamp: datetime
     target: str = ""
     category: ObservationCategory = ObservationCategory.OPERATIONAL
     signal: ObservationSignal | None = None
     evidence: ObservationEvidence | None = None
     confidence: float = 0.0
-    timestamp: datetime = datetime.now(timezone.utc)
     metadata: tuple[tuple[str, str], ...] = ()
 
     def __post_init__(self) -> None:

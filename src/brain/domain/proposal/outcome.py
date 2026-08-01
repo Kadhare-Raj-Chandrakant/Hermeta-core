@@ -25,10 +25,10 @@ class ProposalOutcome:
     - Code-level changes (e.g., "modify RetrievalEngine.score_documents")
     """
 
-    outcome_id: uuid.UUID = uuid.uuid4()
+    outcome_id: uuid.UUID
+    created_at: datetime
     description: str = ""
     category: str = ""
-    created_at: datetime = datetime.now(timezone.utc)
 
     def __post_init__(self) -> None:
         if not self.description.strip():

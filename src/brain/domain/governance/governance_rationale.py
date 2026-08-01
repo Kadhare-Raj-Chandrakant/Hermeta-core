@@ -14,13 +14,13 @@ class GovernanceRationale:
     Authority belongs to GovernanceDecision.
     """
 
-    rationale_id: uuid.UUID = uuid.uuid4()
+    rationale_id: uuid.UUID
+    created_at: datetime
     explanation: str = ""
     supporting_evidence_ids: tuple = ()
     constitutional_interpretations: tuple = ()
     constitutional_basis: tuple = ()
     findings: tuple = ()
-    created_at: datetime = datetime.now(timezone.utc)
 
     def __post_init__(self) -> None:
         if not self.explanation.strip():

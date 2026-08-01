@@ -27,13 +27,13 @@ class ObservationSignal:
     - Interpretations
     """
 
-    signal_id: uuid.UUID = uuid.uuid4()
+    signal_id: uuid.UUID
+    timestamp: datetime
     category: SignalCategory = SignalCategory.OPERATIONAL
     source: str = ""
     metric_name: str = ""
     value: float = 0.0
     unit: str = ""
-    timestamp: datetime = datetime.now(timezone.utc)
 
     def __post_init__(self) -> None:
         if not self.source.strip():

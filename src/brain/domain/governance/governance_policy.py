@@ -12,14 +12,14 @@ class GovernancePolicy:
     Governance interprets policies; it never modifies them.
     """
 
-    policy_id: uuid.UUID = uuid.uuid4()
+    policy_id: uuid.UUID
+    created_at: datetime
     identifier: str = ""
     title: str = ""
     description: str = ""
     category: str = ""
     governing_principle: str = ""
     version: str = "1.0"
-    created_at: datetime = datetime.now(timezone.utc)
 
     def __post_init__(self) -> None:
         if not self.identifier.strip():

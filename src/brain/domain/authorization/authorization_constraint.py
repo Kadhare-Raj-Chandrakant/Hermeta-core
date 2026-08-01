@@ -19,11 +19,11 @@ class AuthorizationConstraint:
     - "authorization expired — re-authorization required"
     """
 
-    constraint_id: uuid.UUID = uuid.uuid4()
+    constraint_id: uuid.UUID
+    created_at: datetime
     constraint_type: str = ""
     description: str = ""
     policy_ids: tuple = ()
-    created_at: datetime = datetime.now(timezone.utc)
 
     def __post_init__(self) -> None:
         if not self.description.strip():

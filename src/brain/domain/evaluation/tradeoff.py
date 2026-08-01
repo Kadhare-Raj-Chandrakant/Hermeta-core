@@ -20,11 +20,11 @@ class Tradeoff:
     not just text. Future evaluations may analyze tradeoff structures.
     """
 
-    tradeoff_id: uuid.UUID = uuid.uuid4()
+    tradeoff_id: uuid.UUID
+    created_at: datetime
     benefit: str = ""
     cost: str = ""
     dimension: str = ""
-    created_at: datetime = datetime.now(timezone.utc)
 
     def __post_init__(self) -> None:
         if not self.benefit.strip():

@@ -33,11 +33,11 @@ class AuthorizationRecord:
     - A-16: Authorization contains no execution metadata.
     """
 
-    authorization_id: uuid.UUID = uuid.uuid4()
-    governance_decision_id: uuid.UUID = uuid.uuid4()
+    authorization_id: uuid.UUID
+    governance_decision_id: uuid.UUID
+    rationale_id: uuid.UUID
+    issued_at: datetime
     state: str = "requires_review"  # AuthorizationState value
-    rationale_id: uuid.UUID = uuid.uuid4()
-    issued_at: datetime = datetime.now(timezone.utc)
     constitutional_version: str = "1.0"
     superseded_by: uuid.UUID | None = None
 

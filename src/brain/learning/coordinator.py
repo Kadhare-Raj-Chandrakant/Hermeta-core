@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import logging
 
 from brain.domain.ports.knowledge_ingestion import KnowledgeIngestionPort
 from brain.detection.observation import Observation
@@ -11,6 +12,9 @@ from brain.learning.reflection_bridge import ReflectionBridge
 from brain.learning.report import LearningReport
 from brain.reflection.engine import ReflectionEngine
 from brain.validation.engine import ValidationEngine
+
+
+logger = logging.getLogger(__name__)
 
 
 class LearningCoordinator:
@@ -54,8 +58,12 @@ class LearningCoordinator:
                             title=candidate.title,
                         )
                     )
-                except Exception:
+                except (ValueError, KeyError, ValidationError) as e:
                     rejected += 1
+                    logger.warning(f"Learning rejected due to domain validation failure: {e}")
+                except Exception as e:
+                    logger.error(f"Fatal error encountered during learning step: {e}", exc_info=True)
+                    raise  # Preserve stack trace for severe system failures
             else:
                 rejected += 1
 

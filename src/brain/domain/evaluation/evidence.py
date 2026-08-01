@@ -23,7 +23,8 @@ class EvaluationEvidence:
     - THEORETICAL_REASONING: Derived from architectural principles
     """
 
-    evidence_id: uuid.UUID = uuid.uuid4()
+    evidence_id: uuid.UUID
+    created_at: datetime
     evidence_type: EvidenceType = EvidenceType.THEORETICAL_REASONING
     description: str = ""
     # Traceability references (immutable UUIDs)
@@ -31,7 +32,6 @@ class EvaluationEvidence:
     hypothesis_ids: tuple[uuid.UUID, ...] = field(default_factory=tuple)
     problem_ids: tuple[uuid.UUID, ...] = field(default_factory=tuple)
     proposal_ids: tuple[uuid.UUID, ...] = field(default_factory=tuple)
-    created_at: datetime = datetime.now(timezone.utc)
     metadata: tuple[tuple[str, str], ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:

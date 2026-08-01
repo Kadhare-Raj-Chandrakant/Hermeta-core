@@ -1,4 +1,5 @@
 import sqlite3
+import atexit
 from pathlib import Path
 
 
@@ -6,8 +7,18 @@ class SQLiteConnection:
     def __init__(self, db_path: str | Path) -> None:
         self._db_path = str(db_path)
         self._conn: sqlite3.Connection | None = None
+        self._closed = False
+        atexit.register(self.close)
+
+    def __enter__(self) -> 'SQLiteConnection':
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        self.close()
 
     def connect(self) -> sqlite3.Connection:
+        if self._closed:
+            raise RuntimeError("Connection is closed")
         if self._conn is None:
             self._conn = sqlite3.connect(self._db_path)
             self._conn.row_factory = sqlite3.Row
@@ -15,9 +26,10 @@ class SQLiteConnection:
         return self._conn
 
     def close(self) -> None:
-        if self._conn is not None:
+        if self._conn is not None and not self._closed:
             self._conn.close()
             self._conn = None
+            self._closed = True
 
     def execute(self, sql: str, params: tuple = ()) -> sqlite3.Cursor:
         return self.connect().execute(sql, params)

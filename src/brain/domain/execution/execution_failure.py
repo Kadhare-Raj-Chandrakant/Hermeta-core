@@ -12,12 +12,12 @@ class ExecutionFailure:
     They are evidence only.
     """
 
-    failure_id: uuid.UUID = uuid.uuid4()
+    failure_id: uuid.UUID
+    timestamp: datetime
+    related_plan_id: uuid.UUID
+    related_result_id: uuid.UUID
     failure_type: str = ""
     observed_error: str = ""
-    timestamp: datetime = datetime.now(timezone.utc)
-    related_plan_id: uuid.UUID = uuid.uuid4()
-    related_result_id: uuid.UUID = uuid.uuid4()
 
     def __post_init__(self) -> None:
         if not self.failure_type.strip():

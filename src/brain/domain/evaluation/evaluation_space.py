@@ -19,11 +19,11 @@ class EvaluationSpace:
     - E-12: EvaluationSpace supports comparative reasoning.
     """
 
-    space_id: uuid.UUID = uuid.uuid4()
-    problem_statement_id: uuid.UUID = uuid.uuid4()
+    space_id: uuid.UUID
+    problem_statement_id: uuid.UUID
+    created_at: datetime
     proposal_ids: tuple = field(default_factory=tuple)
     evaluations: tuple = field(default_factory=tuple)
-    created_at: datetime = datetime.now(timezone.utc)
 
     def __post_init__(self) -> None:
         pass

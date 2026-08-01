@@ -14,12 +14,12 @@ class AuthorizationRationale:
     Authority belongs to AuthorizationRecord.
     """
 
-    rationale_id: uuid.UUID = uuid.uuid4()
+    rationale_id: uuid.UUID
+    created_at: datetime
     explanation: str = ""
     supporting_findings: tuple = ()
     supporting_constraint_ids: tuple = ()
     constitutional_basis: tuple = ()
-    created_at: datetime = datetime.now(timezone.utc)
 
     def __post_init__(self) -> None:
         if not self.explanation.strip():
