@@ -262,8 +262,15 @@ class PipelineOrchestrator:
     def _run_observation(self, raw_input: Any, trace_ids: Tuple[UUID, ...]) -> SystemObservation:
         """Run Observation engine."""
         from brain.engine.observation_engine import ObservationPolicy
+        
+        # Reject None input explicitly - constitutional boundary enforcement
+        if raw_input is None:
+            raise ValueError("raw_input cannot be None")
+        if not isinstance(raw_input, bytes):
+            raise TypeError("raw_input must be bytes")
+        
         input_data = ObservationInput(
-            raw_input=raw_input if isinstance(raw_input, bytes) else str(raw_input).encode(),
+            raw_input=raw_input,
             category='operational',
             detection_source='pipeline_orchestrator',
             metadata=tuple(trace_ids),
