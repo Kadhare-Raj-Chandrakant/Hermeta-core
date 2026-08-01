@@ -25,7 +25,9 @@
 | | Created certification docs | HERMES_CONSTITUTION_CERTIFICATION.md, HERMES_ENGINE_CONTRACTS.md, HERMES_CONSTITUTIONAL_PIPELINE.md |
 | | Updated architecture state | Updated HERMES_ARCHITECTURE_STATE.md to B.8 COMPLETE |
 | | Created PMOS files | FOUNDATION/, PMOS/ engine contracts, PMOS_VALIDATION.md |
-| Current | PMOS implementation | Creating PMOS files (MANIFEST, SESSION, CURRENT_STATE, NEXT_TASK, etc.) |
+| 2026-07-31 | Milestone 26.1 complete | 8 behavioral engines + orchestrator implemented |
+| 2026-08-01 | Milestone 26.2 complete | Integration validation layer implemented, 1796 tests pass |
+| 2026-08-01 | Milestone 26.2 certification refinement complete | All certification gaps closed, exit gate passed |
 
 ---
 
@@ -102,3 +104,6 @@ None — all architectural questions resolved in B.8 certification.
 5. Create PMOS_VALIDATION.md
 6. Verify all tests pass
 7. Commit and push
+8. Update PMOS for Milestone 26.2 completion
+9. Complete certification refinement
+10. Verify exit gate passed
