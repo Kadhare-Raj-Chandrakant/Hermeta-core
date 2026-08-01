@@ -8,7 +8,11 @@ build/
 .env
 venv/
 .venv/
-graphify-out/cache/
-graphify-out/.graphify_*
-graphify-out/cost.json
-graphify-out/manifest.json
+graphify-out/
+tests/integration/pipeline/test_artifact_accounting.py
+tests/integration/pipeline/test_certification.py
+tests/integration/pipeline/test_completeness.py
+tests/integration/pipeline/test_deterministic.py
+tests/integration/pipeline/test_orchestrator_audit.py
+tests/integration/pipeline/test_pipeline_execution.py
+tests/integration/pipeline/test_pmos_consistency.py
