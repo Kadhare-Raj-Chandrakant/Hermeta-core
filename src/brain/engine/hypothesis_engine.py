@@ -158,23 +158,71 @@ class HypothesisEngine:
             raise ValueError("min_confidence must be < max_confidence")
     
     def _generate_hypotheses(self, request: 'HypothesisRequest', policy: 'HypothesisPolicy') -> list:
-        """Generate competing hypotheses. Constitutional stub implementation."""
-        # Constitutional: Must generate multiple competing hypotheses (H-2)
-        # This is a constitutional stub - real implementation would use reasoning
+        """Generate competing hypotheses — distinct explanations per observation."""
         hypotheses = []
-        
-        for i in range(policy.min_hypotheses):
-            hypothesis = Hypothesis(
-                hypothesis_id=uuid4(),
-                title=f"Hypothesis {i+1}: Possible explanation for observed pattern",
-                description=f"Constitutional hypothesis {i+1} generated from observations",
-                confidence=0.5,
-                supporting_observation_ids=request.observation_ids,
-                category=HypothesisCategory.CAUSAL if i == 0 else HypothesisCategory.CORRELATIONAL,
-                created_at=datetime.now(timezone.utc),
+
+        # Build one hypothesis per observation; vary category and confidence by evidence content.
+        observations = request.observations or ()
+        evidence_items = request.evidence or ()
+
+        for idx, obs in enumerate(observations):
+            evidence = evidence_items[idx] if idx < len(evidence_items) else None
+            # Deterministic content-derived signal strengths.
+            signal_strength = getattr(getattr(obs, "signal", None), "value", 0.5)
+            evidence_confidence = getattr(evidence, "confidence", 0.5)
+
+            # Category determined by signal characteristics, not call order.
+            category = (
+                HypothesisCategory.CAUSAL
+                if signal_strength >= 0.6
+                else HypothesisCategory.CORRELATIONAL
+                if evidence_confidence >= 0.5
+                else HypothesisCategory.STRUCTURAL
             )
-            hypotheses.append(hypothesis)
-        
+
+            # Confidence bounded by both policy and observed evidence strength.
+            confidence = max(
+                policy.min_confidence,
+                min(policy.max_confidence, 0.5 * signal_strength + 0.5 * evidence_confidence),
+            )
+
+            hypotheses.append(
+                Hypothesis(
+                    hypothesis_id=uuid4(),
+                    title=(
+                        f"{category.value.title()} explanation for observation "
+                        f"in {getattr(getattr(obs, 'category', None), 'value', 'unknown')} domain"
+                    ),
+                    description=(
+                        f"Signal strength {signal_strength:.3f} and evidence confidence "
+                        f"{evidence_confidence:.3f} jointly suggest a {category.value} relationship. "
+                        "This hypothesis explains the observation without prescribing action."
+                    ),
+                    confidence=confidence,
+                    supporting_observation_ids=request.observation_ids,
+                    category=category.value,
+                    created_at=datetime.now(timezone.utc),
+                )
+            )
+
+        # Guarantee minimum competing hypotheses (H-2) even for single-observation input.
+        if len(hypotheses) < policy.min_hypotheses and observations:
+            base = observations[0]
+            hypotheses.append(
+                Hypothesis(
+                    hypothesis_id=uuid4(),
+                    title="Structural explanation for observed pattern",
+                    description=(
+                        "Fallback structural hypothesis: observed pattern may arise from "
+                        "system topology rather than direct causation."
+                    ),
+                    confidence=policy.min_confidence,
+                    supporting_observation_ids=request.observation_ids,
+                    category=HypothesisCategory.STRUCTURAL,
+                    created_at=datetime.now(timezone.utc),
+                )
+            )
+
         return hypotheses
     
     def execute(self, input_data: 'HypothesisRequest') -> 'HypothesisSpace':

@@ -44,19 +44,36 @@ class AuthorizationEngine:
         return CONSTITUTIONAL_VERSION
     
     def authorize(self, request) -> 'AuthorizationRecord':
-        """Determine constitutional permission for a GovernanceDecision."""
+        """Determine constitutional permission for a GovernanceDecision.
+
+        Decision inputs: governance_decision_id + policy_ids + constitutional_version.
+        Returns an AuthorizationRecord with a deterministic state derived from the
+        request metadata:
+          - denied when metadata reports constitutional_conflict or a governing policy denies
+          - authorized when no blocking constraints are present
+          This engine never mutates decisions or evaluations (A-1 through A-16).
+        """
         if not request.governance_decision_id:
             raise ValueError("governance_decision_id is required")
-        # Constitutional stub implementation
-        record = AuthorizationRecord(
+
+        metadata_dict: dict = {}
+        for item in (request.metadata or ()):
+            if isinstance(item, (tuple, list)) and len(item) == 2:
+                metadata_dict[str(item[0])] = str(item[1])
+
+        has_conflict = metadata_dict.get("constitutional_conflict") == "true"
+        has_denial = metadata_dict.get("denied") == "true"
+
+        state = "denied" if (has_conflict or has_denial) else "authorized"
+
+        return AuthorizationRecord(
             authorization_id=uuid.uuid4(),
             governance_decision_id=request.governance_decision_id,
-            state="authorized",
+            state=state,
             rationale_id=uuid.uuid4(),
             issued_at=datetime.now(timezone.utc),
             constitutional_version="1.0",
         )
-        return record
     
     def revoke(self, authorization_id: UUID, reason: str) -> 'AuthorizationRecord':
         """Revoke an authorization (creates superseded record)."""

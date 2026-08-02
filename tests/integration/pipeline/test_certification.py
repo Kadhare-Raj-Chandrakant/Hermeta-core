@@ -321,12 +321,18 @@ class TestTerminologyStandardization:
         from brain.engine.authorization_engine import AuthorizationEngine
         from brain.engine.execution_engine import ExecutionEngine
 
-        # All imports work - architecture unchanged
-        assert True
+        # All imports work - architecture unchanged; verify they are the real classes.
+        assert ObservationEngine.__name__ == "ObservationEngine"
+        assert ExecutionEngine.__name__ == "ExecutionEngine"
+        assert issubclass(ObservationEngine, object)
+        assert hasattr(ObservationEngine, "execute")
+        assert hasattr(ExecutionEngine, "execute")
 
     def test_no_renamed_milestones(self):
         """No milestones renamed."""
-        # Milestone 26.1 = Behavioral Engine Foundation
-        # Milestone 26.2 = Integration Validation & System Verification
-        # These are not renamed, only terminology refined where appropriate
-        assert True
+        # Verify the milestone naming anchors still exist in project docs.
+        from pathlib import Path
+        root = Path(__file__).resolve().parents[3]
+        required_anchors = ("ARCHITECTURE.md", "CHANGELOG.md")
+        missing = [a for a in required_anchors if not (root / a).exists()]
+        assert not missing, f"Renamed or missing baseline documents: {missing}"

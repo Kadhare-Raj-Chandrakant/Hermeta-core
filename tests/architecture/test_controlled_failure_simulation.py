@@ -1544,16 +1544,41 @@ class TestRecoveryOwnershipVerification:
 
     def test_no_duplicate_recovery_logic(self):
         """Verify no duplicate recovery logic across components."""
-        # Recovery logic only in UseCases
-        # Engines, Repositories, Bridges, Workflow have NO recovery logic
-        # Verified by boundary responsibility tests
-        assert True
+        # Real check: no engine, repository, bridge, or workflow module re-implements rollback.
+        from pathlib import Path
+        import re
+        src_root = Path(__file__).resolve().parents[2] / "src" / "brain"
+        rollback_in = []
+        for sub in ("engine", "repositories", "application/bridges", "application/workflow"):
+            d = src_root / sub
+            if not d.is_dir():
+                continue
+            for py in d.rglob("*.py"):
+                if py.name == "__init__.py":
+                    continue
+                src = py.read_text(encoding="utf-8")
+                if re.search(r"def\s+rollback\s*\(", src):
+                    rollback_in.append(str(py.relative_to(src_root)))
+        assert rollback_in == [], f"Duplicate rollback logic lives outside UseCase layer: {rollback_in}"
 
     def test_no_hidden_recovery(self):
         """Verify no hidden recovery paths."""
-        # No __del__, no background threads, no async recovery
-        # Verified by architecture tests
-        assert True
+        # Real check: no __del__, no background thread spawn, no module-level thread/event loops.
+        from pathlib import Path
+        import re
+        src_root = Path(__file__).resolve().parents[2] / "src" / "brain"
+        forbidden = []
+        for py in src_root.rglob("*.py"):
+            if py.name == "__init__.py":
+                continue
+            src = py.read_text(encoding="utf-8")
+            if "def __del__" in src:
+                forbidden.append(f"{py.relative_to(src_root)}: __del__")
+            if re.search(r"threading\.Thread\s*\(", src):
+                forbidden.append(f"{py.relative_to(src_root)}: threading.Thread(")
+            if re.search(r"asyncio\.(run|create_task|ensure_future)\s*\(", src):
+                forbidden.append(f"{py.relative_to(src_root)}: asyncio.run/task")
+        assert forbidden == [], f"Hidden recovery/destructor paths found: {forbidden}"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1615,5 +1640,7 @@ class TestFinalAssessment:
         # Verify all invariants preserved
         assert verify_invariants_preserved()
 
-        # Final answer
-        assert True  # YES - Hermes preserves architecture
+        # Final answer: re-check the same invariants to prove the statement is behavioral, not a placeholder.
+        assert verify_invariants_preserved() is True, (
+            "Architecture invariants must be preserved under all A.8 checks"
+        )

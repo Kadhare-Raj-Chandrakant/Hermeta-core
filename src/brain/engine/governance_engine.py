@@ -44,19 +44,53 @@ class GovernanceEngine:
         return CONSTITUTIONAL_VERSION
     
     def adjudicate(self, request) -> 'GovernanceDecision':
-        """Adjudicate an evaluation against constitutional policy."""
+        """Adjudicate an evaluation against constitutional policy.
+
+        Governance inputs: evaluation_id + policy_ids + constitutional_version.
+        Returns a deterministic decision state derived from the request metadata.
+
+        Decision rule (deterministic, content-derived, no freedom to optimize):
+          - CONSTITUTIONAL_CONFLICT when the request's metadata explicitly marks conflict
+          - APPROVED when evidence supports the evaluation
+          - REQUIRES_REVIEW when evidence is weak (default conservative state)
+          This engine never mutates evaluations or proposals (G-11, G-12).
+        """
         if not request.evaluation_id:
             raise ValueError("evaluation_id is required")
-        # Constitutional stub implementation
-        decision = GovernanceDecision(
-            decision_id=uuid.uuid4(),
+
+        # Metadata may be tuple-of-key-value-pairs or a raw tuple of trace IDs.
+        # Parse defensively into a lookup without assuming shape.
+        metadata_dict: dict = {}
+        for item in (request.metadata or ()):
+            if isinstance(item, (tuple, list)) and len(item) == 2:
+                metadata_dict[str(item[0])] = str(item[1])
+
+        # Deterministic policy-driven state derivation.
+        has_conflict = metadata_dict.get("constitutional_conflict") == "true"
+        evidence_count = len(
+            metadata_dict.get("evaluation_evidence_ids", "").split(",")
+        ) if metadata_dict.get("evaluation_evidence_ids") else 0
+        evidence_present = (
+            metadata_dict.get("has_evidence") == "true"
+            or evidence_count > 0
+            or bool(metadata_dict.get("supported"))
+        )
+
+        if has_conflict:
+            state = DecisionState.CONSTITUTIONAL_CONFLICT.value
+        elif evidence_present:
+            state = DecisionState.APPROVED.value
+        else:
+            state = DecisionState.REQUIRES_REVIEW.value
+
+        return GovernanceDecision(
+            decision_id=uuid4(),
             evaluation_id=request.evaluation_id,
-            state="approved",  # or rejected, deferred, etc.
-            rationale_id=uuid.uuid4(),
-            policy_ids=request.policy_ids,
+            state=state,
+            rationale_id=uuid4(),
+            policy_ids=tuple(request.policy_ids),
             created_at=datetime.now(timezone.utc),
         )
-        return decision
     
     def review(self, decision_id: UUID, new_evidence: Tuple[UUID, ...]) -> 'GovernanceDecision':
         """Review a decision with new evidence. Returns new decision (supersedes old)."""

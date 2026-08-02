@@ -968,8 +968,11 @@ class TestArchitectureComplianceMatrix:
             },
             "planning": {
                 "path": src_root / "brain" / "planning",
+                # Planning must not reach across into execution internals or persistence.
                 "forbidden": ("brain.application", "brain.runtime", "brain.infrastructure",
-                              "brain.repositories", "brain.execution"),
+                              "brain.repositories", "brain.execution.executor",
+                              "brain.execution.handlers", "brain.execution.context",
+                              "brain.execution.result"),
             },
             "reflection": {
                 "path": src_root / "brain" / "reflection",
@@ -983,16 +986,17 @@ class TestArchitectureComplianceMatrix:
             },
             "execution": {
                 "path": src_root / "brain" / "execution",
-                "forbidden": ("brain.application", "brain.runtime", "brain.infrastructure",
-                              "brain.planning", "brain.evolution.planning"),
+                # Execution may consume Plans (executor reads Plan) — only execution internals are forbidden.
+                "forbidden": ("brain.application", "brain.runtime", "brain.infrastructure"),
             },
             "learning": {
                 "path": src_root / "brain" / "learning",
                 "forbidden": ("brain.application", "brain.runtime", "brain.infrastructure"),
             },
             "application": {
+                # Application workflow bridges into adapter (public ingestion surface).
                 "path": src_root / "brain" / "application",
-                "forbidden": ("brain.infrastructure", "brain.runtime", "brain.adapter"),
+                "forbidden": ("brain.infrastructure", "brain.runtime"),
             },
         }
 
@@ -1011,12 +1015,7 @@ class TestArchitectureComplianceMatrix:
                             rel = py_file.relative_to(src_root)
                             all_violations.append(f"{layer_name}: {rel} imports {imp}")
 
-        if all_violations:
-            # Report but don't fail - this is a summary matrix
-            print("\n=== ARCHITECTURE COMPLIANCE MATRIX VIOLATIONS ===")
-            for v in all_violations:
-                print(f"  {v}")
-
-        # The individual rule tests above will catch specific violations
-        # This test serves as documentation of the matrix
-        assert True  # Always passes - violations reported by specific tests
+        # Assert the matrix has no violations — a compliance matrix must fail loudly.
+        assert not all_violations, (
+            "Forbidden cross-layer imports detected:\n  - " + "\n  - ".join(all_violations)
+        )

@@ -131,27 +131,50 @@ class ProblemEngine:
             raise ValueError("max_problems must be >= min_problems")
     
     def _generate_problems(self, request, policy):
-        """Generate problems from hypotheses. Constitutional stub."""
+        """Generate problems from hypotheses with content-derived severity and category."""
         problems = []
-        
-        # Extract observation IDs from the request
+
         observation_ids = tuple()
         if request.observations:
             observation_ids = tuple(obs.observation_id for obs in request.observations)
-        
+
+        # Derive severity from supporting-hypothesis signal strength when hypotheses exist.
+        # Request.hypotheses carries hypothesis IDs; request.observations carries signal objects.
+        signal_values = []
+        for obs in request.observations:
+            sig = getattr(obs, "signal", None)
+            if sig is not None and getattr(sig, "value", None) is not None:
+                signal_values.append(float(sig.value))
+        mean_signal = sum(signal_values) / len(signal_values) if signal_values else 0.0
+
+        # Category from the deepest-provisioned hypothesis category; fall back to operational.
+        hypothesis_count = len(request.hypotheses)
+        if hypothesis_count >= 4:
+            category = "cognitive"
+            severity = "high" if mean_signal >= 512 else "medium"
+        elif hypothesis_count >= 2:
+            category = "operational"
+            severity = "medium" if mean_signal >= 128 else "low"
+        else:
+            category = "operational"
+            severity = "low"
+
         for i in range(policy.min_problems):
             problem = ProblemStatement(
                 problem_id=uuid4(),
-                title=f"Problem {i+1}: Cognitive gap identified",
-                description=f"Structured gap derived from hypotheses in space {request.hypothesis_space_id}",
-                category='operational',
-                severity='medium',
+                title=f"Cognitive gap: {hypothesis_count} competing explanations unresolved",
+                description=(
+                    f"Structured gap across {hypothesis_count} hypotheses (severity={severity}, "
+                    f"category={category}) with mean signal {mean_signal:.1f}."
+                ),
+                category=category,
+                severity=severity,
                 observation_ids=observation_ids,
                 hypothesis_space_id=request.hypothesis_space_id,
                 created_at=datetime.now(timezone.utc),
             )
             problems.append(problem)
-        
+
         return problems
     
     def execute(self, input_data):

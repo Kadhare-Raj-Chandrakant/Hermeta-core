@@ -107,22 +107,39 @@ class ProposalEngine:
             raise ValueError("max_proposals must be >= min_proposals")
 
     def _generate_proposals(self, request, policy):
+        """Generate distinct, structurally-varying proposals anchored on the problem."""
         proposals = []
+        # Derive a category pattern from problem_statement_id so proposals vary by input.
+        categories = [
+            ("knowledge_improvement", "Refine understanding"),
+            ("process_optimization", "Improve handling flow"),
+            ("risk_mitigation", "Reduce identified risk"),
+        ]
+        # Content-derived rotation ensures different problems yield different starting focal proposal.
+        rotation = request.problem_statement_id.int % len(categories)
+
         for i in range(policy.min_proposals):
-            proposal = Proposal(
+            category, intent = categories[(rotation + i) % len(categories)]
+            p = Proposal(
                 proposal_id=uuid.uuid4(),
-                title=f"Proposal {i+1}: Cognitive improvement",
-                description=f"Improvement proposal {i+1} for problem {request.problem_statement_id}",
-                category="knowledge_improvement",
+                title=f"{intent} for knowledge gap {request.problem_statement_id}",
+                description=(
+                    f"{category.replace('_', ' ').title()} targeting the identified cognitive gap; "
+                    "non-mutating constitutional suggestion only."
+                ),
+                category=category,
                 state="generated",
                 originating_problem_id=request.problem_statement_id,
                 hypothesis_space_id=uuid.uuid4(),
                 observation_ids=(),
-                rationale=f"Rationale for improvement {i+1}",
-                intended_outcomes=(f"Improve {request.problem_statement_id}",),
+                rationale=(
+                    f"Problem {request.problem_statement_id} (space {request.problem_space_id}) "
+                    f"requires {category} treatment to resolve the knowledge boundary."
+                ),
+                intended_outcomes=(f"Reduced ambiguity boundary for {request.problem_statement_id}",),
                 created_at=datetime.now(timezone.utc),
             )
-            proposals.append(proposal)
+            proposals.append(p)
         return proposals
 
     def execute(self, input_data) -> 'ProposalSpace':

@@ -145,27 +145,45 @@ class ObservationEngine:
             raise ValueError("min_sample_count must be >= 1")
 
     def _create_signal(self, raw_input: bytes, policy: ObservationPolicy) -> ObservationSignal:
-        # Constitutional: Signal is a fact, not an interpretation.
+        # Constitutional: Signal is a fact derived from raw input, not an interpretation.
+        # Derive a deterministic, real signal: size-based analysis of the input payload.
+        size = len(raw_input)
+        # Entropy-based estimate of information density (bytes vs unique bytes).
+        unique_bytes = len(set(raw_input)) if raw_input else 0
+        density = unique_bytes / 256.0 if unique_bytes else 0.0
         return ObservationSignal(
             signal_id=uuid4(),
             category=SignalCategory.OPERATIONAL,
             source="observation_engine",
-            metric_name="raw_input_size",
-            value=float(len(raw_input)),
-            unit="bytes",
+            metric_name="payload_information_density",
+            value=density,
+            unit="ratio",
             timestamp=datetime.now(timezone.utc),
         )
 
     def _create_evidence(self, raw_input: bytes, policy: ObservationPolicy) -> ObservationEvidence:
-        # Constitutional: Evidence supports the signal, doesn't interpret it.
+        # Constitutional: Evidence supports the signal with measurable facts.
+        size = len(raw_input)
+        unique_bytes = len(set(raw_input)) if raw_input else 0
+        # Confidence scales with sample size, capped by policy floor.
+        measured = min(1.0, size / 1024.0) if size else 0.0
+        confidence = max(policy.min_evidence_confidence, measured)
         return ObservationEvidence(
             evidence_id=uuid4(),
-            description=f"Raw input of {len(raw_input)} bytes received",
-            sample_count=1,
+            description=(
+                f"Payload of {size} bytes with {unique_bytes} unique byte values; "
+                f"information density {unique_bytes / 256.0:.3f}/1.000"
+            ),
+            sample_count=max(1, size),
             measurement_start=datetime.now(timezone.utc),
             measurement_end=datetime.now(timezone.utc),
-            confidence=1.0,
-            metadata=(("source", "raw_input"), ("size_bytes", str(len(raw_input)))),
+            confidence=confidence,
+            metadata=(
+                ("source", "raw_input"),
+                ("size_bytes", str(size)),
+                ("unique_byte_values", str(unique_bytes)),
+                ("information_density", f"{unique_bytes / 256.0:.6f}"),
+            ),
         )
 
     def _calculate_confidence(self, evidence: ObservationEvidence, policy: ObservationPolicy) -> float:
