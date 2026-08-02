@@ -31,6 +31,8 @@
 | 2026-08-01 | post-audit-v1.0 complete | Security & reliability audit fixes, tagged `post-audit-v1.0` |
 | 2026-08-01 | Milestone 26.3 complete | Robustness validation, 1,900 tests pass, tagged `milestone-26.3` |
 | 2026-08-02 | Milestone 26.4 complete | System Acceptance Audit, 10 areas PASS, cold-start verified, tagged `milestone-26.4` |
+| 2026-08-02 | Milestone 27.0 complete | Architecture Freeze Verification — all checks PASS, architecture unchanged |
+| 2026-08-02 | Milestone 27.1 complete | Production Readiness Audit — repo clean, deps valid, build reproducible, 1,900 tests pass |
 
 ---
 
@@ -60,6 +62,39 @@ If this session is interrupted, the next AI should:
 | Added AuthorizationConstraint | A-12/A-13 constitutional constraints explicit |
 | Corrected stale model count 66 → 43 | Verified frozen dataclass count is 43; "66" was unverified in any test |
 | Corrected stale test totals 1,735 → 1,900 | Verified via full pytest run; "1,735" predated Milestone 26.2 |
+| 27.0/27.1: audit-only milestone | Freeze verification + production readiness audit; zero code or architecture changes |
+
+---
+
+## Milestone 27.0 + 27.1 — Audit Results (2026-08-02)
+
+### Architecture Freeze Verification
+| Check | Result |
+|-------|--------|
+| Engine ownership (exactly 8 engines, no duplication/missing) | PASS |
+| Pipeline integrity (8-stage order preserved) | PASS |
+| Constitutional boundaries (70 boundary/forbidden-import tests) | PASS |
+| Domain model freeze (all 43 frozen, no mutation methods) | PASS |
+| Dependency graph DAG (circular/reverse/hidden import tests) | PASS |
+
+### Production Readiness Audit
+| Check | Result |
+|-------|--------|
+| Repository health (clean git, no debug/temp artifacts) | PASS |
+| Dependency audit (stdlib + pytest only; no unused/missing deps) | PASS |
+| Build reproducibility (fresh isolated run reproduces 1,900 passing) | PASS |
+| Configuration audit (no config files, no secrets in repo) | PASS |
+| Error handling (explicit exceptions, traceability preserved, no bare excepts) | PASS |
+| Full test suite | 1,900 passed, 0 regressions |
+| Architecture tests | 420 passed |
+| Integration tests | 274 passed |
+| PMOS validation tests | 13 passed |
+
+### Findings (documented, not fixed — audit-only milestone)
+1. `graphify-out/` (212 generated cache files) remains tracked in git despite being listed in `.gitignore`; predates the ignore rule. Future consideration.
+2. No dependency manifest (`requirements.txt`/`pyproject.toml`) exists; project relies on stdlib + installed pytest. Future consideration for CI reproducibility.
+3. `src/brain/engine/exceptions.py` defines 59 classes but only 27 unique (10 exception types redefined 2–6×). Functionally harmless (later definitions win) but redundant. Future consideration.
+4. One transient order-dependent flake observed in `tests/events/test_event.py::test_events_are_equal_by_id` during a cold isolated run; not reproducible across 3 subsequent runs (all 1,900 passed). Future consideration.
 
 ---
 
@@ -98,6 +133,7 @@ None — all architectural questions resolved in B.8 certification.
 | `PMOS/ARCHITECTURE_INDEX/` | In progress |
 | `PMOS/PMOS_VALIDATION.md` | In progress |
 | `PMOS/HANDOFF_STATE.md` | Created (26.4 cold-start recovery) |
+| `PMOS/SESSION.md` | Milestone 27.0/27.1 audit results recorded (this session) |
 | `PMOS/CURRENT_STATE.md` | Milestone 26.4 status added, stale counts corrected |
 | `PMOS/NEXT_TASK.md` | Milestone 27 target prepared |
 | `PMOS/MANIFEST.md` | Stale model/test counts corrected |
