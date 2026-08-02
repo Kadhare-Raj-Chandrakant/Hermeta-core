@@ -27,6 +27,10 @@
 | B.6 Authorization & Constitutional Permission | ✅ COMPLETE | Record, Context, History, Constraint, Rationale, Token |
 | B.7 Execution Architecture Foundation | ✅ COMPLETE | Plan, Context, Result, Receipt, History, Artifact, Failure |
 | **B.8 Constitutional Certification & Freeze** | ✅ **COMPLETE** | Certification complete, architecture frozen |
+| **26.1 Engine Implementation** | ✅ **COMPLETE** | 8 behavioral engines + orchestrator |
+| **26.2 Integration Validation** | ✅ **COMPLETE** | Integration layer validated, 1,900 tests pass |
+| **26.3 Robustness Validation** | ✅ **COMPLETE** | Error handling, concurrency, resource limits validated |
+| **26.4 System Acceptance Audit** | ✅ **COMPLETE** | 10-area audit PASS, cold-start recovery verified |
 
 ---
 
@@ -37,7 +41,7 @@
 Observation → Hypothesis → Problem → Proposal → Evaluation → Governance → Authorization → Execution
 ```
 
-### Domain Model Count: 66 models across 8 stages
+### Domain Model Count: 43 frozen dataclasses across 8 stages
 
 | Stage | Models | Status |
 |-------|--------|--------|
@@ -67,6 +71,7 @@ Observation → Hypothesis → Problem → Proposal → Evaluation → Governanc
 |------------|-------|--------|
 | Architecture Tests | 420 | ✅ PASS |
 | Unit/Integration | 1,480 | ✅ PASS |
+| Acceptance Audit (26.4) | 10 areas | ✅ PASS |
 | **Total** | **1,900** | ✅ **ALL PASS** |
 | Regressions | 0 | ✅ |
 
@@ -86,7 +91,7 @@ src/brain/domain/
 ├── execution/            # 8 files (enums, artifact, context, failure, history, plan, receipt, result)
 ├── evolution_domain.py   # Legacy (frozen, not in pipeline)
 ├── evolution_models/     # Legacy (frozen, not in pipeline)
-└── __init__.py           # Exports all 66 models
+└── __init__.py           # Exports all 43 models
 ```
 
 ### Documentation
@@ -167,7 +172,7 @@ ExecutionPlan.authorization_token_id
 
 ## Current Implementation Target
 
-**Milestone 26.2 Complete.** Architecture frozen and certified. Ready for Milestone 26.3 (Robustness Validation).
+**Milestone 26.4 Complete.** System Acceptance Audit passed. Cold-start recovery verified. Ready for Milestone 27 (Production Hardening, Documentation, Final Certification).
 
 ---
 
@@ -179,4 +184,4 @@ ExecutionPlan.authorization_token_id
 
 ## Next Action
 
-Begin **Milestone 26: Integration & System Validation** — implement the 8 engines against their frozen contracts.
+Begin **Milestone 27: Production Hardening, Documentation, and Final Certification.** See `PMOS/NEXT_TASK.md`.

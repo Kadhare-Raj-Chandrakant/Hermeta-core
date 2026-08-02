@@ -28,6 +28,9 @@
 | 2026-07-31 | Milestone 26.1 complete | 8 behavioral engines + orchestrator implemented |
 | 2026-08-01 | Milestone 26.2 complete | Integration validation layer implemented, 1796 tests pass |
 | 2026-08-01 | Milestone 26.2 certification refinement complete | All certification gaps closed, exit gate passed |
+| 2026-08-01 | post-audit-v1.0 complete | Security & reliability audit fixes, tagged `post-audit-v1.0` |
+| 2026-08-01 | Milestone 26.3 complete | Robustness validation, 1,900 tests pass, tagged `milestone-26.3` |
+| 2026-08-02 | Milestone 26.4 complete | System Acceptance Audit, 10 areas PASS, cold-start verified, tagged `milestone-26.4` |
 
 ---
 
@@ -55,6 +58,8 @@ If this session is interrupted, the next AI should:
 | Added DecisionContext | G-5/G-6 explicit evidence and policy references |
 | Added AuthorizationToken | A-15 Execution consumes Token only |
 | Added AuthorizationConstraint | A-12/A-13 constitutional constraints explicit |
+| Corrected stale model count 66 → 43 | Verified frozen dataclass count is 43; "66" was unverified in any test |
+| Corrected stale test totals 1,735 → 1,900 | Verified via full pytest run; "1,735" predated Milestone 26.2 |
 
 ---
 
@@ -92,18 +97,19 @@ None — all architectural questions resolved in B.8 certification.
 | `PMOS/ARCHITECTURE_FINGERPRINT.md` | In progress |
 | `PMOS/ARCHITECTURE_INDEX/` | In progress |
 | `PMOS/PMOS_VALIDATION.md` | In progress |
+| `PMOS/HANDOFF_STATE.md` | Created (26.4 cold-start recovery) |
+| `PMOS/CURRENT_STATE.md` | Milestone 26.4 status added, stale counts corrected |
+| `PMOS/NEXT_TASK.md` | Milestone 27 target prepared |
+| `PMOS/MANIFEST.md` | Stale model/test counts corrected |
+| `PMOS/ARCHITECTURE_FINGERPRINT.md` | Stale model/test counts corrected |
+| `tests/integration/pipeline/test_orchestrator_audit.py` | Fixed IndentationError (26.2) |
+| `src/brain/engine/pipeline.py` | None raw_input guard (26.3) |
 
 ---
 
 ## Next Actions
 
-1. Complete CURRENT_STATE.md
-2. Complete NEXT_TASK.md (single implementation target)
-3. Create ARCHITECTURE_FINGERPRINT.md
-4. Create ARCHITECTURE_INDEX/
-5. Create PMOS_VALIDATION.md
-6. Verify all tests pass
-7. Commit and push
-8. Update PMOS for Milestone 26.2 completion
-9. Complete certification refinement
-10. Verify exit gate passed
+1. Begin Milestone 27: Production Hardening, Documentation, and Final Certification
+2. Follow `PMOS/NEXT_TASK.md` (single implementation target)
+3. Verify all 1,900 tests pass before any merge
+4. Commit and tag each completed milestone on GitHub

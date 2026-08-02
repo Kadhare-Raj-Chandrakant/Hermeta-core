@@ -51,9 +51,9 @@ This is the single entry point for any AI resuming Hermes development.
 | Pipeline Version | 8-stage frozen |
 | Constitution Version | 1.0 (O-1 through X-23) |
 | Pipeline Stages | 8 (Observation → Hypothesis → Problem → Proposal → Evaluation → Governance → Authorization → Execution) |
-| Domain Models | 66 frozen dataclasses |
+| Domain Models | 43 frozen dataclasses |
 | Architecture Tests | 420 passing |
-| Total Tests | 1,735 passing |
+| Total Tests | 1,900 passing |
 | Constitutional Laws | 82 (O-1 through X-23) |
 | Frozen Layers | Domain, Engine Contracts, Pipeline Order, Dependency Direction |
 
@@ -65,10 +65,10 @@ This is the single entry point for any AI resuming Hermes development.
 |--------|--------|
 | Architecture | FROZEN (B.8 Certified) |
 | Phase B | COMPLETE (B.0–B.7) |
-| Next Milestone | B.8 → C.1 (Engine Implementation) |
-| Domain Models | 66 frozen dataclasses across 8 stages |
+| Next Milestone | 27 (Production Hardening & Final Certification) |
+| Domain Models | 43 frozen dataclasses across 8 stages |
 | Architecture Tests | 420 passing |
-| Total Tests | 1,735 passing |
+| Total Tests | 1,900 passing |
 | Regressions | 0 |
 
 ---

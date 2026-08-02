@@ -8,9 +8,9 @@
 | Pipeline Version | 8-stage frozen |
 | Constitution Version | 1.0 |
 | Pipeline Stages | 8 (Observation → Hypothesis → Problem → Proposal → Evaluation → Governance → Authorization → Execution) |
-| Domain Models | 66 frozen dataclasses across 8 stages |
+| Domain Models | 43 frozen dataclasses across 8 stages |
 | Architecture Tests | 420 passing |
-| Total Tests | 1,735 passing |
+| Total Tests | 1,900 passing |
 | Constitutional Laws | 82 (O-1 through X-23) |
 | Frozen Layers | Domain, Engine Contracts, Pipeline Order, Dependency Direction |
 
@@ -23,7 +23,7 @@
 | Architecture | B.8 | `sha256:arch-b8-certified` |
 | Pipeline | 8-stage | `sha256:pipe-8-frozen` |
 | Constitution | 1.0 | `sha256:const-v1-final` |
-| Domain Models | 66 models | `sha256:models-66-frozen` |
+| Domain Models | 43 models | `sha256:models-43-frozen` |
 | Engine Contracts | 8 contracts | `sha256:contracts-8-final` |
 
 ---
@@ -36,7 +36,7 @@
 - Stage ownership: Each model has exactly one owner stage
 - Dependency graph: DAG, no cycles
 - Constitutional laws: 82 laws across 8 categories (O-1 through X-23)
-- Domain model immutability: All 66 models are `@dataclass(frozen=True)`
+- Domain model immutability: All 43 models are `@dataclass(frozen=True)`
 - History mutability: All history is append-only (supersession, never mutation)
 - Traceability: Every artifact traces to originating observation
 - Stage separation: No stage may import from downstream stages
