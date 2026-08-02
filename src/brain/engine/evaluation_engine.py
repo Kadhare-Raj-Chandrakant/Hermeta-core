@@ -165,7 +165,8 @@ class EvaluationRequest:
     problem_statement_id: UUID
     proposal_ids: Tuple[UUID, ...] = field(default_factory=tuple)
     policy: Optional[object] = None
-    context: Tuple[str, ...] = field(default_factory=tuple)
+    # Carries pipeline trace IDs (UUID), not strings.
+    context: Tuple[UUID, ...] = field(default_factory=tuple)
 
     def __post_init__(self):
         # HIGH-1: normalize caller-provided collections to immutable tuples

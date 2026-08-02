@@ -66,28 +66,54 @@ class ProblemEngine:
         is_valid, error = self.validate_input(request)
         if not is_valid:
             raise ValueError(f"Input validation failed: {error}")
-        
+
         policy = request.policy or self._default_policy()
         self._validate_policy(policy)
-        
+
         # Generate problems from hypotheses
         problems = self._generate_problems(request, policy)
-        
+
         if len(problems) < policy.min_problems:
             raise ValueError(f"Must generate at least {policy.min_problems} problems")
-        
+
         space = ProblemSpace(
             space_id=uuid.uuid4(),
             created_at=datetime.now(timezone.utc),
             problem_ids=tuple(p.problem_id for p in problems),
             hypothesis_space_id=request.hypothesis_space_id,
         )
-        
+
         is_valid, error = self.validate_output(space)
         if not is_valid:
             raise ValueError(f"Output validation failed: {error}")
-        
+
         return space
+
+    def create_statement_for_observation(
+        self,
+        observation,
+        problem_space,
+        hypothesis_space,
+    ):
+        """Factory for a ProblemStatement bound to an observation + space pair.
+
+        This method owns the construction of a domain ProblemStatement derived
+        from the canonical artifacts of this engine. PipelineOrchestrator must
+        call this rather than instantiating ProblemStatement itself (B.8 stage
+        ownership: only the Problem Engine creates problem-domain artifacts).
+        """
+        if not problem_space.problem_ids:
+            raise ValueError("problem_space must contain at least one problem id")
+        return ProblemStatement(
+            problem_id=problem_space.problem_ids[0],
+            title="Structured cognitive gap",
+            description="Derived from competing hypotheses",
+            category='operational',
+            severity='medium',
+            observation_ids=(observation.observation_id,),
+            hypothesis_space_id=hypothesis_space.space_id,
+            created_at=datetime.now(timezone.utc),
+        )
     
     def _default_policy(self):
         class DefaultPolicy:
@@ -162,7 +188,8 @@ class ProblemRequest:
     observations: tuple = ()
     hypotheses: Tuple[UUID, ...] = ()
     policy: 'ProblemPolicy' = None
-    context: Tuple[str, ...] = ()
+    # Carries pipeline trace IDs (UUID), not strings.
+    context: Tuple[UUID, ...] = ()
 
     def __post_init__(self):
         # HIGH-1: normalize caller-provided collections to immutable tuples

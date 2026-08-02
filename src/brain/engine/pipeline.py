@@ -201,19 +201,12 @@ class PipelineOrchestrator:
             # Stage 3: Problem
             _current_stage = "problem"
             problem_space = self._run_problem(observation, hypothesis_space, trace_ids)
-            # ProblemSpace only has IDs, create ProblemStatement inline for pipeline
-            if problem_space.problem_ids:
-                from brain.engine.problem_engine import ProblemStatement
-                problem_statement = ProblemStatement(
-                    problem_id=problem_space.problem_ids[0],
-                    title="Structured cognitive gap",
-                    description="Derived from competing hypotheses",
-                    category='operational',
-                    severity='medium',
-                    observation_ids=(observation.observation_id,),
-                    hypothesis_space_id=hypothesis_space.space_id,
-                    created_at=datetime.now(timezone.utc),
-                )
+            # ProblemSpace only has IDs — the Problem Engine owns statement construction
+            problem_statement = self._problem_engine.create_statement_for_observation(
+                observation=observation,
+                problem_space=problem_space,
+                hypothesis_space=hypothesis_space,
+            )
             trace_ids += (self._extract_trace_id(problem_statement),)
             
             # Stage 4: Proposal

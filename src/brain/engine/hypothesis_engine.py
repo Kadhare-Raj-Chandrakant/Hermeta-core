@@ -20,15 +20,6 @@ from brain.engine.validation import Validator, validate_uuid, validate_non_empty
 from brain.domain.problem import Hypothesis, HypothesisSpace, HypothesisCategory
 
 
-class HypothesisCategory(Enum):
-    CAUSAL = "causal"
-    CORRELATIONAL = "correlational"
-    STRUCTURAL = "structural"
-    BEHAVIORAL = "behavioral"
-    ENVIRONMENTAL = "environmental"
-    UNKNOWN = "unknown"
-
-
 @dataclass(frozen=True)
 class HypothesisPolicy:
     """Policy governing hypothesis generation."""

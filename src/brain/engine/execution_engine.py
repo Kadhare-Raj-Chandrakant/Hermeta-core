@@ -131,5 +131,4 @@ __all__ = (
     'ExecutionFailure',
     'ExecutionHistory',
     'ExecutionEngine',
-    'ExecutionContext',
 )

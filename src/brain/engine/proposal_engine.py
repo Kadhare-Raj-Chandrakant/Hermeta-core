@@ -146,7 +146,8 @@ class ProposalRequest:
     problem_statement_id: UUID
     problem_space_id: UUID
     policy: Optional[object] = None
-    context: Tuple[str, ...] = field(default_factory=tuple)
+    # Carries pipeline trace IDs (UUID), not strings.
+    context: Tuple[UUID, ...] = field(default_factory=tuple)
 
 
 # Export
