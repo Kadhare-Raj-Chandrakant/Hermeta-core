@@ -15,11 +15,11 @@ This document specifies the manual validation rules for the Project Memory Opera
 | Current milestone | `PMOS/CURRENT_STATE.md` | SESSION, NEXT_TASK, MANIFEST |
 | Next implementation | `PMOS/NEXT_TASK.md` | SESSION, CURRENT_STATE, MANIFEST |
 | Architecture | `docs/HERMES_ARCHITECTURE_STATE.md` | PMOS, SESSION, CURRENT_STATE |
-| Reports | `reports/` | PMOS, docs/ |
-| Roadmap | `ROADMAP.md` | PMOS, docs/ |
-| Decisions | `ADRs/` | PMOS, docs/ |
+| Reports | `docs/` (milestone_*.md) + `CHANGELOG.md` | PMOS, FOUNDATION |
+| Roadmap | `docs/HERMES_ARCHITECTURE_STATE.md` | PMOS, FOUNDATION |
+| Decisions | `PMOS/SESSION.md` (Active Decisions) | docs/, FOUNDATION |
 | Constitutional laws | `FOUNDATION/CONSTITUTION.md` | docs/, PMOS/ |
-| Engine contracts | `PMOS/PMOS-*-ENGINE.md` | docs/, PMOS/ |
+| Engine contracts | `PMOS/PMOS-1-OBSERVATION.md` … `PMOS-8-EXECUTION.md` | docs/, PMOS/ |
 | Pipeline reasoning | `docs/HERMES_CONSTITUTIONAL_PIPELINE.md` | PMOS/, docs/ |
 
 **Rule**: If a fact appears in two places with different values, STOP. Resolve before continuing.

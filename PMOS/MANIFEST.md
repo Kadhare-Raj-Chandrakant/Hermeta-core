@@ -27,7 +27,7 @@ This is the single entry point for any AI resuming Hermes development.
 | Current task | `PMOS/NEXT_TASK.md` |
 | Current state | `PMOS/CURRENT_STATE.md` |
 | Architecture reference | `PMOS/ARCHITECTURE_INDEX/` |
-| Engine contracts | `PMOS/PMOS-*-ENGINE.md` |
+| Engine contracts | `PMOS/PMOS-1-OBSERVATION.md` … `PMOS-8-EXECUTION.md` |
 | Validation rules | `PMOS/PMOS_VALIDATION.md` |
 
 ---
@@ -63,9 +63,10 @@ This is the single entry point for any AI resuming Hermes development.
 
 | Aspect | Status |
 |--------|--------|
+| Project Status | CERTIFIED COMPLETE |
 | Architecture | FROZEN (B.8 Certified) |
 | Phase B | COMPLETE (B.0–B.7) |
-| Next Milestone | 27 (Production Hardening & Final Certification) |
+| Next Milestone | None — certified complete |
 | Domain Models | 43 frozen dataclasses across 8 stages |
 | Architecture Tests | 420 passing |
 | Total Tests | 1,900 passing |
@@ -82,6 +83,6 @@ This is the single entry point for any AI resuming Hermes development.
 | "What are the laws?" | `FOUNDATION/CONSTITUTION.md` |
 | "Where am I?" | `PMOS/CURRENT_STATE.md` |
 | "What do I do next?" | `PMOS/NEXT_TASK.md` |
-| "How does X engine work?" | `PMOS/PMOS-*-ENGINE.md` |
+| "How does X engine work?" | `PMOS/PMOS-1-OBSERVATION.md` … `PMOS-8-EXECUTION.md` |
 | "Is this allowed?" | `PMOS/PMOS_VALIDATION.md` |
 | "Where is the code?" | `PMOS/ARCHITECTURE_FINGERPRINT.md` |

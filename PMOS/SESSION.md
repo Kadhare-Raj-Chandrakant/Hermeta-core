@@ -34,6 +34,7 @@
 | 2026-08-02 | Milestone 27.0 complete | Architecture Freeze Verification — all checks PASS, architecture unchanged |
 | 2026-08-02 | Milestone 27.1 complete | Production Readiness Audit — repo clean, deps valid, build reproducible, 1,900 tests pass |
 | 2026-08-02 | Milestone 27.2 complete | System Hardening — 27.1 findings resolved, 1,900 tests pass, tagged `milestone-27.2` |
+| 2026-08-02 | Milestone 27.3 complete | Final Documentation & PMOS Freeze — final certification issued, PMOS frozen, tagged `milestone-27.3` |
 
 ---
 
@@ -138,6 +139,38 @@ All four findings from 27.1 resolved.
 
 ---
 
+## Milestone 27.3 — Final Documentation & PMOS Freeze Results (2026-08-02)
+
+### PMOS Recovery Validation (cold-start simulation)
+- Read only MANIFEST, SESSION, CURRENT_STATE, NEXT_TASK as a new AI with no prior context.
+- Project identity, architecture version (B.8 frozen), current status, completed work, frozen constraints, and next action were all recoverable. **PASS.**
+
+### Pointer Integrity Audit
+- MANIFEST: corrected stale "Next Milestone" (27 → None, certified complete) and engine-contract glob (`PMOS-*-ENGINE.md` → `PMOS-1-OBSERVATION.md` … `PMOS-8-EXECUTION.md`).
+- PMOS_VALIDATION: replaced broken references to nonexistent `reports/`, `ROADMAP.md`, `ADRs/`, and the stale engine glob with actual authoritative locations.
+- AI_OPERATING_GUIDE: same corrections (architecture/docs, docs/+CHANGELOG, SESSION decisions).
+
+### Single Source of Truth Audit
+- Verified ownership: identity (FOUNDATION/), architecture (docs/HERMES_ARCHITECTURE_STATE.md), constitution (FOUNDATION/CONSTITUTION.md), milestone (CURRENT_STATE), task (NEXT_TASK), history (docs/ + CHANGELOG.md), decisions (SESSION.md), contracts (PMOS-1..8). No duplicate copies introduced.
+
+### Architecture Memory Verification
+- Exactly 8 engines confirmed in `src/brain/engine/`; pipeline order confirmed in `pipeline.py`.
+- 43 frozen domain models (non-frozen: none); architecture tests 420 passed.
+
+### Historical Preservation Audit
+- `reports/`, `verification/`, `decisions/` were never present; their intended content is preserved in `docs/` (milestone_25_*.md), `CHANGELOG.md`, `SESSION_NOTES.md`, git tags, and `PMOS/SESSION.md` Active Decisions. Historical milestone reports and verification remain available; nothing overwritten.
+
+### Final Certification
+- Created `docs/HERMES_FINAL_CERTIFICATION.md` (immutable completion certificate: identity, architecture status, milestone completion, verification baseline, frozen elements, allowed/forbidden changes).
+
+### PMOS Freeze
+- CURRENT_STATE: Project Status = CERTIFIED COMPLETE; 27.3 COMPLETE row; no next action.
+- SESSION: 27.3 log + results recorded.
+- NEXT_TASK: implementation target replaced — Hermes Core is complete; future work requires approved milestone, explicit scope, architectural review.
+- MANIFEST: Project Status = CERTIFIED COMPLETE; next milestone = None.
+
+---
+
 ## Open Questions (None)
 
 None — all architectural questions resolved in B.8 certification.
@@ -184,12 +217,18 @@ None — all architectural questions resolved in B.8 certification.
 | `PMOS/ARCHITECTURE_FINGERPRINT.md` | Stale model/test counts corrected |
 | `tests/integration/pipeline/test_orchestrator_audit.py` | Fixed IndentationError (26.2) |
 | `src/brain/engine/pipeline.py` | None raw_input guard (26.3) |
+| `PMOS/MANIFEST.md` | Final freeze: Project Status CERTIFIED COMPLETE, next milestone None, engine-contract pointers corrected |
+| `PMOS/PMOS_VALIDATION.md` | Fixed broken ownership references (reports/, ROADMAP.md, ADRs/, engine glob) |
+| `FOUNDATION/AI_OPERATING_GUIDE.md` | Fixed broken single-source-of-truth references |
+| `PMOS/CURRENT_STATE.md` | Milestone 27.3 COMPLETE, Project Status CERTIFIED COMPLETE, no next action |
+| `PMOS/SESSION.md` | Milestone 27.3 audit results recorded (this session) |
+| `PMOS/NEXT_TASK.md` | Implementation target replaced — project complete; future work requires approval |
+| `docs/HERMES_FINAL_CERTIFICATION.md` | Created (final immutable completion certificate) |
 
 ---
 
 ## Next Actions
 
-1. Begin Milestone 27: Production Hardening, Documentation, and Final Certification
-2. Follow `PMOS/NEXT_TASK.md` (single implementation target)
-3. Verify all 1,900 tests pass before any merge
-4. Commit and tag each completed milestone on GitHub
+1. **None.** Hermes Core is complete and certified.
+2. Future work requires: an approved new milestone, explicit scope definition, and architectural review if frozen boundaries change.
+3. No implementation task is pending. See `PMOS/NEXT_TASK.md`.

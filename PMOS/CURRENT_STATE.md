@@ -5,6 +5,7 @@
 | Property | Value |
 |----------|-------|
 | Project | Hermes Brain |
+| Project Status | CERTIFIED COMPLETE |
 | Phase | Phase B Complete — Phase C Ready |
 | Milestone | B.8 Constitutional Certification Complete |
 | Architecture Version | B.8 (Constitutional Certification) |
@@ -34,6 +35,7 @@
 | **27.0 Architecture Freeze Verification** | ✅ **COMPLETE** | Ownership/pipeline/boundaries/freeze/DAG all PASS |
 | **27.1 Production Readiness Audit** | ✅ **COMPLETE** | Repo clean, deps valid, build reproducible, 1,900 tests pass |
 | **27.2 System Hardening** | ✅ **COMPLETE** | Artifacts untracked, deps manifest added, exceptions consolidated, flake fixed |
+| **27.3 Final Documentation & PMOS Freeze** | ✅ **COMPLETE** | Final certification issued, PMOS frozen, project certified complete |
 
 ---
 
@@ -105,6 +107,7 @@ docs/
 ├── HERMES_ENGINE_CONTRACTS.md            # 8 engine contracts
 ├── HERMES_CONSTITUTIONAL_PIPELINE.md     # Pipeline reasoning
 ├── HERMES_STABILIZATION_CERTIFICATION.md # A.9 certification
+├── HERMES_FINAL_CERTIFICATION.md         # Final certification (27.3)
 ```
 
 ### PMOS (Project Memory Operating System)
@@ -175,16 +178,16 @@ ExecutionPlan.authorization_token_id
 
 ## Current Implementation Target
 
-**Milestone 27.2 Complete.** System hardening resolved all 27.1 findings. Ready for Milestone 27.3 (Final Documentation & PMOS Freeze).
+**CERTIFIED COMPLETE.** Hermes Core is complete. Final certification issued in `docs/HERMES_FINAL_CERTIFICATION.md`. No active implementation task.
 
 ---
 
 ## Open Issues
 
-**None.** All architectural questions resolved. Zero defects. Zero regressions. Production readiness confirmed.
+**None.** All architectural questions resolved. Zero defects. Zero regressions. Project certified complete.
 
 ---
 
 ## Next Action
 
-Begin **Milestone 27.3: Final Documentation & PMOS Freeze.** See `PMOS/NEXT_TASK.md`.
+**None.** Hermes Core is complete. Future work requires an approved new milestone, explicit scope definition, and architectural review if frozen boundaries change. See `PMOS/NEXT_TASK.md`.

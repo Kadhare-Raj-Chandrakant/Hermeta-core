@@ -1,43 +1,48 @@
 # Next Implementation Task
 
 ## Current Status
-Milestone 27.2 Complete. System Hardening resolved all 27.1 findings. Architecture B.8 frozen, 1,900 tests passing.
 
-## Next Milestone Target
-Milestone 27.3: Final Documentation & PMOS Freeze
+**Hermes Core is complete.**
+
+Milestone 27.3 (Final Documentation & PMOS Freeze) is complete. The project is certified:
+`COMPLETE`, `CERTIFIED`, `FROZEN`, `RECOVERABLE FROM REPOSITORY MEMORY`.
+
+See `docs/HERMES_FINAL_CERTIFICATION.md` (final immutable completion certificate).
 
 ---
 
-## Next Implementation Target
+## No Active Implementation Task
 
-### Target: Final Documentation & PMOS Freeze
+There is no pending implementation. All milestones through 27.3 are COMPLETE:
 
-### Prerequisites (All Complete)
-- [x] All 8 behavioral engines implemented and validated
-- [x] Constitutional pipeline orchestration verified
-- [x] 1,900 tests passing (420 architecture + 1,480 unit/integration)
-- [x] Zero regressions
-- [x] Full traceability chain certified
-- [x] Engine isolation boundaries enforced
-- [x] Robustness validation (26.3) complete
-- [x] System acceptance audit (26.4) complete — 10 areas PASS
-- [x] Cold-start recovery verified (PMOS/HANDOFF_STATE.md)
-- [x] Architecture freeze verification (27.0) complete
-- [x] Production readiness audit (27.1) complete
-- [x] System hardening (27.2) complete — artifacts untracked, deps manifest, exceptions consolidated, flake fixed
+| Milestone | Status |
+|-----------|--------|
+| Milestone 25 — Architecture Completion & Stabilization | COMPLETE |
+| Milestone 26.1 — Behavioral Engine Foundation | COMPLETE |
+| Milestone 26.2 — Integration Validation | COMPLETE |
+| Milestone 26.3 — Robustness Validation | COMPLETE |
+| Milestone 26.4 — System Acceptance Audit | COMPLETE |
+| Milestone 27.0/27.1 — Production Audit | COMPLETE |
+| Milestone 27.2 — System Hardening | COMPLETE |
+| Milestone 27.3 — Final Documentation & PMOS Freeze | COMPLETE |
 
-### Next Work Packages (When Ready)
-| Work Package | Focus |
-|--------------|-------|
-| 27.3.1 | Final developer documentation — architecture, engine contracts, contributing guide |
-| 27.3.2 | Runtime documentation — deployment, configuration, health monitoring |
-| 27.3.3 | PMOS freeze — verify all PMOS files consistent and complete |
-| 27.3.4 | Final certification — full audit pass, release notes, handoff verification |
+---
+
+## Future Work Requires
+
+Future work is **not** scheduled. It requires, in order:
+
+1. An **approved new milestone**
+2. An **explicit scope definition**
+3. **Architectural review** if frozen boundaries change
+
+Any future work must preserve the frozen architecture (B.8), the 8-engine ownership, the 8-stage pipeline, the engine contracts, constitutional laws, dependency direction, and traceability model.
 
 ---
 
 ## Constitutional Compliance Gates
-Before merge, all must pass:
+
+If future work is approved, before merge all must pass:
 - [ ] All 1,900 tests pass
 - [ ] Zero regressions
 - [ ] Architecture unchanged (B.8 frozen)
@@ -47,4 +52,5 @@ Before merge, all must pass:
 ---
 
 ## Blocking Items
-None. All prerequisites complete.
+
+None. The project is certified complete.

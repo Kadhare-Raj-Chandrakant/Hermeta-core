@@ -34,8 +34,8 @@ If repository state conflicts with PMOS:
 ### Duplicate Prevention
 Before ANY implementation:
 1. Check CURRENT_STATE — already implemented?
-2. Check reports/ — already verified?
-3. Check docs/ — already documented?
+2. Check docs/ + CHANGELOG.md — already verified?
+3. Check PMOS/SESSION.md — already decided?
 4. Check approvals — already approved?
 
 If YES to any: **STOP.**
@@ -43,12 +43,12 @@ If YES to any: **STOP.**
 ### Single Source of Truth
 | Fact | Single Owner |
 |------|--------------|
-| Current milestone | CURRENT_STATE only |
-| Next implementation | NEXT_TASK only |
-| Architecture | architecture/ only |
-| Reports | reports/ only |
-| Roadmap | ROADMAP only |
-| Decisions | ADRs only |
+| Current milestone | `PMOS/CURRENT_STATE.md` only |
+| Next implementation | `PMOS/NEXT_TASK.md` only |
+| Architecture | `docs/HERMES_ARCHITECTURE_STATE.md` only |
+| Reports | `docs/` + `CHANGELOG.md` only |
+| Roadmap | `docs/HERMES_ARCHITECTURE_STATE.md` only |
+| Decisions | `PMOS/SESSION.md` only |
 
 Never duplicate facts across documents.
 
