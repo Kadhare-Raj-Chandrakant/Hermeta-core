@@ -1,5 +1,6 @@
 from dataclasses import replace
 from datetime import datetime, timezone
+import hashlib
 import uuid
 
 from brain.domain.enums import LifecycleState
@@ -83,5 +84,21 @@ class EvolutionExecutor:
 
 
 def _plan_identity(plan: EvolutionPlan, policy: str) -> uuid.UUID:
-    h = hash(plan.operations) ^ hash(plan.affected_targets) ^ hash(policy)
-    return uuid.UUID(int=abs(h) % (2**128))
+    """Deterministic, content-derived plan identity (E-12 / X-7).
+
+    Replaces the earlier salted-hash implementation. Full operation formatting
+    is hashed (target_id | transition_type | expected_version_id | reason) so
+    that two semantically different plans cannot collide.
+    """
+    h = hashlib.sha256()
+    op_keys = sorted(
+        f"{op.target_id}|{op.transition_type.value}|{op.expected_version_id}|{op.reason}".encode("utf-8")
+        for op in plan.operations
+    )
+    target_keys = sorted(str(t).encode("utf-8") for t in plan.affected_targets)
+    h.update(b"||".join(op_keys))
+    h.update(b":::")
+    h.update(b"||".join(target_keys))
+    h.update(b":::")
+    h.update(policy.encode("utf-8"))
+    return uuid.UUID(bytes=h.digest()[:16])

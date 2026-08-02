@@ -4,6 +4,7 @@
 Shared base classes and interfaces for all Hermes engines.
 """
 
+import threading
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -138,23 +139,27 @@ class EngineResult(Generic[OutputT]):
 
 class EngineRegistry:
     """Registry for engine implementations."""
-    
+
     _engines: dict = {}
-    
+    _lock = threading.RLock()
+
     @classmethod
     def register(cls, engine_name: str, engine_class: type):
         """Register an engine implementation."""
-        cls._engines[engine_name] = engine_class
-    
+        with cls._lock:
+            cls._engines[engine_name] = engine_class
+
     @classmethod
     def get(cls, engine_name: str) -> Optional[type]:
         """Get engine class by name."""
-        return cls._engines.get(engine_name)
-    
+        with cls._lock:
+            return cls._engines.get(engine_name)
+
     @classmethod
     def list_engines(cls) -> Tuple[str, ...]:
         """List all registered engines."""
-        return tuple(cls._engines.keys())
+        with cls._lock:
+            return tuple(cls._engines.keys())
 
 
 # Constitutional compliance markers

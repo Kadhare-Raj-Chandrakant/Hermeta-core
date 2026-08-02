@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import threading
 
 from brain.application.brain_service import BrainService
 from brain.application.usecases.models import KnowledgeVersionDTO
@@ -22,32 +23,36 @@ class BrainSession:
         self._task: Task | None = None
         self._started_at: datetime | None = None
         self._learned_items: int = 0
+        self._lock = threading.RLock()
 
     def begin(self, task: Task) -> ContextPackage:
-        if self._task is not None:
-            raise RuntimeError("Session already active")
-        self._task = task
-        self._started_at = datetime.now(timezone.utc)
+        with self._lock:
+            if self._task is not None:
+                raise RuntimeError("Session already active")
+            self._task = task
+            self._started_at = datetime.now(timezone.utc)
         return self._brain.prepare(task)
 
     def learn(self, candidate: KnowledgeCandidate) -> KnowledgeVersionDTO:
-        if self._task is None:
-            raise RuntimeError("No active session")
-        version = self._brain.learn(candidate)
-        self._learned_items += 1
-        return version
+        with self._lock:
+            if self._task is None:
+                raise RuntimeError("No active session")
+            self._learned_items += 1
+        return self._brain.learn(candidate)
 
     def complete(self) -> None:
-        if self._task is None:
-            raise RuntimeError("No active session")
-        self._task = None
-        self._started_at = None
-        self._learned_items = 0
+        with self._lock:
+            if self._task is None:
+                raise RuntimeError("No active session")
+            self._task = None
+            self._started_at = None
+            self._learned_items = 0
 
     def status(self) -> SessionStatus:
-        return SessionStatus(
-            active=self._task is not None,
-            started_at=self._started_at,
-            task=self._task,
-            learned_items=self._learned_items,
-        )
+        with self._lock:
+            return SessionStatus(
+                active=self._task is not None,
+                started_at=self._started_at,
+                task=self._task,
+                learned_items=self._learned_items,
+            )

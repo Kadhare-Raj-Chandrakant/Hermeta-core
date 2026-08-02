@@ -1,3 +1,4 @@
+import logging
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -12,6 +13,8 @@ from brain.application.workflow.report import WorkflowReport
 from brain.domain.task import Priority, Task
 
 _ZERO_DURATION = timedelta(0)
+
+logger = logging.getLogger(__name__)
 
 _DEFAULT_LEARNING_SUMMARY = {
     "learning_started": False,
@@ -76,7 +79,11 @@ class BrainWorkflow:
             learning_request = self._mapper.from_execution(execution_summary)
             try:
                 learning_summary = self._learning.execute_learning(learning_request)
+            except (ValueError, KeyError) as exc:
+                logger.warning("Learning phase rejected by domain validation: %s", exc)
+                learning_summary = None
             except Exception:
+                logger.exception("Unexpected infrastructure error during learning phase")
                 learning_summary = None
             learning_completed_at = datetime.now(timezone.utc)
             learning_duration = learning_completed_at - learning_started_at
