@@ -1,16 +1,16 @@
 # Next Implementation Task
 
 ## Current Status
-Milestone 26.4 Complete. System Acceptance Audit passed. Cold-start recovery verified.
+Milestone 27.2 Complete. System Hardening resolved all 27.1 findings. Architecture B.8 frozen, 1,900 tests passing.
 
 ## Next Milestone Target
-Milestone 27: Production Hardening, Documentation, and Final Certification
+Milestone 27.3: Final Documentation & PMOS Freeze
 
 ---
 
 ## Next Implementation Target
 
-### Target: Production Hardening, Documentation & Final Certification
+### Target: Final Documentation & PMOS Freeze
 
 ### Prerequisites (All Complete)
 - [x] All 8 behavioral engines implemented and validated
@@ -22,14 +22,17 @@ Milestone 27: Production Hardening, Documentation, and Final Certification
 - [x] Robustness validation (26.3) complete
 - [x] System acceptance audit (26.4) complete — 10 areas PASS
 - [x] Cold-start recovery verified (PMOS/HANDOFF_STATE.md)
+- [x] Architecture freeze verification (27.0) complete
+- [x] Production readiness audit (27.1) complete
+- [x] System hardening (27.2) complete — artifacts untracked, deps manifest, exceptions consolidated, flake fixed
 
 ### Next Work Packages (When Ready)
 | Work Package | Focus |
 |--------------|-------|
-| 27.1 | Production hardening — persistence layer, retry/recovery, operational guardrails |
-| 27.2 | Runtime documentation — deployment, configuration, health monitoring |
-| 27.3 | Developer documentation — architecture, engine contracts, contributing |
-| 27.4 | Final certification — full audit pass, release notes, handoff verification |
+| 27.3.1 | Final developer documentation — architecture, engine contracts, contributing guide |
+| 27.3.2 | Runtime documentation — deployment, configuration, health monitoring |
+| 27.3.3 | PMOS freeze — verify all PMOS files consistent and complete |
+| 27.3.4 | Final certification — full audit pass, release notes, handoff verification |
 
 ---
 

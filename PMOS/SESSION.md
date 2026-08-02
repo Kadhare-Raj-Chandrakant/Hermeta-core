@@ -33,6 +33,7 @@
 | 2026-08-02 | Milestone 26.4 complete | System Acceptance Audit, 10 areas PASS, cold-start verified, tagged `milestone-26.4` |
 | 2026-08-02 | Milestone 27.0 complete | Architecture Freeze Verification — all checks PASS, architecture unchanged |
 | 2026-08-02 | Milestone 27.1 complete | Production Readiness Audit — repo clean, deps valid, build reproducible, 1,900 tests pass |
+| 2026-08-02 | Milestone 27.2 complete | System Hardening — 27.1 findings resolved, 1,900 tests pass, tagged `milestone-27.2` |
 
 ---
 
@@ -98,6 +99,45 @@ If this session is interrupted, the next AI should:
 
 ---
 
+## Milestone 27.2 — System Hardening Results (2026-08-02)
+
+All four findings from 27.1 resolved.
+
+### Artifact Cleanup (Finding 1 → RESOLVED)
+- Removed 212 tracked generated files from `graphify-out/` (git rm --cached).
+- Verified `graphify-out/` in `.gitignore` prevents recurrence.
+- No source/test dependency on graphify-out.
+
+### Dependency Reproducibility (Finding 2 → RESOLVED)
+- Added `requirements.txt` (minimal: `pytest>=7.0`).
+- Verified: src/ uses Python stdlib only; pytest is the sole external dependency.
+- Fresh isolated venv: `pip install -r requirements.txt` → `pytest` → **1,900 passed**.
+
+### Exception Hardening (Finding 3 → RESOLVED)
+- `exceptions.py`: 59 class definitions → 27 unique, one definition each.
+- All 27 public exception names preserved; imports unchanged.
+- Preserved effective inheritance (EngineException base hierarchy) and ExecutionFailedError context.
+- All 1,900 tests pass.
+
+### Test Reliability (Finding 4 → RESOLVED)
+- Cause identified: `Event` frozen dataclass `__eq__` compares `timestamp`; test constructed two events with same id but independent timestamps — a microsecond tick could fail the assertion.
+- Fix: `test_events_are_equal_by_id` now passes an explicit shared timestamp (test intent: equality by id).
+- 3 consecutive full runs + 3 consecutive cache-less runs: all 1,900 passed.
+
+### Production Safety Audit
+- Error handling: exceptions preserve message/error_code/context; pipeline preserves trace_ids on failure; no bare excepts.
+- Logging: no print statements, no pdb/breakpoint, no secrets in src/.
+- Repository hygiene: no temp files, no debug artifacts, graphify-out untracked.
+
+### Architecture Freeze Verification (after changes)
+- Engines: exactly 8, unchanged.
+- Pipeline: 8-stage order unchanged.
+- Domain: 43 frozen models, ownership unchanged.
+- DAG / boundaries / forbidden imports: unchanged (tests pass).
+- Architecture tests: 420 passed. Total suite: 1,900 passed, 0 regressions.
+
+---
+
 ## Open Questions (None)
 
 None — all architectural questions resolved in B.8 certification.
@@ -134,6 +174,10 @@ None — all architectural questions resolved in B.8 certification.
 | `PMOS/PMOS_VALIDATION.md` | In progress |
 | `PMOS/HANDOFF_STATE.md` | Created (26.4 cold-start recovery) |
 | `PMOS/SESSION.md` | Milestone 27.0/27.1 audit results recorded (this session) |
+| `graphify-out/` | Untracked (212 generated files removed from version control) |
+| `requirements.txt` | Created (minimal dependency manifest) |
+| `src/brain/engine/exceptions.py` | Consolidated duplicate exception definitions (59 → 27 unique) |
+| `tests/events/test_event.py` | Fixed nondeterministic equality test (explicit timestamp) |
 | `PMOS/CURRENT_STATE.md` | Milestone 26.4 status added, stale counts corrected |
 | `PMOS/NEXT_TASK.md` | Milestone 27 target prepared |
 | `PMOS/MANIFEST.md` | Stale model/test counts corrected |

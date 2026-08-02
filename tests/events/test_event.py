@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timezone
 
 import pytest
 
@@ -28,6 +29,7 @@ class TestEventBase:
 
     def test_events_are_equal_by_id(self):
         id_ = uuid.uuid4()
-        e1 = Event(event_id=id_)
-        e2 = Event(event_id=id_)
+        ts = datetime.now(timezone.utc)
+        e1 = Event(event_id=id_, timestamp=ts)
+        e2 = Event(event_id=id_, timestamp=ts)
         assert e1 == e2

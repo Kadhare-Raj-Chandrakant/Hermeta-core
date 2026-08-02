@@ -9,10 +9,3 @@ build/
 venv/
 .venv/
 graphify-out/
-tests/integration/pipeline/test_artifact_accounting.py
-tests/integration/pipeline/test_certification.py
-tests/integration/pipeline/test_completeness.py
-tests/integration/pipeline/test_deterministic.py
-tests/integration/pipeline/test_orchestrator_audit.py
-tests/integration/pipeline/test_pipeline_execution.py
-tests/integration/pipeline/test_pmos_consistency.py

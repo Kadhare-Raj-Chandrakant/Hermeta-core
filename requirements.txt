@@ -1,0 +1,5 @@
+# Hermes Brain — runtime & test dependencies
+# src/ uses Python standard library only (conftest.py adds src/ to sys.path).
+# pytest is the only external dependency (test runner).
+
+pytest>=7.0
