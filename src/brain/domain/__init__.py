@@ -9,7 +9,7 @@ from brain.domain.references import Evidence, Relationship
 from brain.domain.task import Task, TaskType, Priority
 from brain.domain.version import KnowledgeVersion
 from brain.domain.understanding import Understanding
-from brain.domain.evolution_domain import (
+from brain.domain.evolution import (
     EvolutionCategory,
     ProposalRiskLevel,
     DecisionState,

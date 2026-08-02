@@ -176,7 +176,7 @@ class TestObservationVsProposalSeparation:
     def test_observation_and_proposal_different_modules(self):
         src_root = get_src_root()
         observation_file = src_root / "brain" / "domain" / "observation" / "observation.py"
-        evolution_file = src_root / "brain" / "domain" / "evolution_domain.py"
+        evolution_file = src_root / "brain" / "domain" / "evolution" / "__init__.py"
 
         assert observation_file.exists(), "Observation module missing"
         assert evolution_file.exists(), "Evolution domain module missing"

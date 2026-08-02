@@ -270,28 +270,19 @@ class TestTraceabilityChain:
 
     def test_traceability_fields_exist(self):
         src_root = get_src_root()
-        
+
         for model, fields in self.TRACE_FIELDS.items():
-            # Find the file containing the actual class definition (not enums, not evolution_models)
+            # Find the file containing the actual class definition (skip enums)
             found = False
             for py_file in (src_root / "brain" / "domain").rglob("*.py"):
-                if py_file.name == "__init__.py":
-                    continue
-                if "evolution_models" in str(py_file):
+                if py_file.name == "__init__.py" or py_file.name == "enums.py":
                     continue
                 source = py_file.read_text(encoding="utf-8")
                 if f"class {model}" in source:
-                    # Skip enum files
-                    if py_file.name == "enums.py":
+                    # Evolution proposals are distinct from core Proposal
+                    if model == "Proposal" and "evolution" in str(py_file).lower():
                         continue
-                    # Skip evolution_domain.py for Proposal (evolution proposal vs main proposal)
-                    if model == "Proposal" and "evolution_domain" in str(py_file):
-                        continue
-                    # Skip ProposalAssumption, ProposalOutcome, ProposalPlan for Proposal
                     if model == "Proposal" and py_file.name in ("assumption.py", "outcome.py", "plan.py") and "proposal" in str(py_file).lower():
-                        continue
-                    # Skip ProposalAssumption for Proposal
-                    if model == "Proposal" and py_file.name == "assumption.py" and "proposal" in str(py_file).lower():
                         continue
                     found = True
                     for field in fields:
@@ -404,9 +395,6 @@ class TestNoDuplicateOwnership:
         for py_file in (src_root / "brain" / "domain").rglob("*.py"):
             if py_file.name == "__init__.py":
                 continue
-            # Skip evolution_models and evolution_domain as they are legacy
-            if "evolution_models" in str(py_file) or "evolution_domain" in str(py_file):
-                continue
             source = py_file.read_text(encoding="utf-8")
             import re
             classes = re.findall(r"^class (\w+)", source, re.MULTILINE)
@@ -507,23 +495,74 @@ class TestConstitutionalCertification:
     """Final constitutional certification."""
 
     def test_certification_criteria_met(self):
-        """All certification criteria from B.8 are met."""
-        criteria = {
-            "pipeline_complete": True,
-            "unique_ownership": True,
-            "boundary_enforcement": True,
-            "dependency_ordering": True,
-            "traceability_complete": True,
-            "engine_contracts_consistent": True,
-            "freeze_invariants_hold": True,
-            "no_constitutional_stage_missing": True,
-            "no_duplicate_ownership": True,
-            "no_illegal_boundary_crossings": True,
-        }
-        
-        for criterion, value in criteria.items():
-            assert value, f"Certification criterion failed: {criterion}"
+        """Behavioral certification: engines verify compliance and are frozen."""
+        from dataclasses import fields, is_dataclass
+        from brain.core.constants import CONSTITUTIONAL_VERSION
+        from brain.engine.base import ConstitutionalCompliance
+        from brain.engine.observation_engine import ObservationEngine
+        from brain.engine.hypothesis_engine import HypothesisEngine
+        from brain.engine.problem_engine import ProblemEngine
+        from brain.engine.proposal_engine import ProposalEngine
+        from brain.engine.evaluation_engine import EvaluationEngine
+        from brain.engine.governance_engine import GovernanceEngine
+        from brain.engine.authorization_engine import AuthorizationEngine
+        from brain.engine.execution_engine import ExecutionEngine
+
+        engines = (
+            ObservationEngine, HypothesisEngine, ProblemEngine, ProposalEngine,
+            EvaluationEngine, GovernanceEngine, AuthorizationEngine, ExecutionEngine,
+        )
+
+        # Every engine must satisfy runtime compliance verification (fail-loud).
+        for engine_class in engines:
+            M = type("ComplianceProbe", (engine_class, ConstitutionalCompliance), {})
+            assert M.verify_compliance() is True, f"{engine_class.__name__} failed runtime compliance"
+
+        # Engine contract versions must be pinned to the constitutional constant.
+        instantiated_versions = set()
+        for engine_class in engines:
+            engine = engine_class()
+            contract_version = engine.contract_version
+            assert contract_version == CONSTITUTIONAL_VERSION, (
+                f"{engine_class.__name__}.contract_version={contract_version!r} "
+                f"!= CONSTITUTIONAL_VERSION={CONSTITUTIONAL_VERSION!r}"
+            )
+            instantiated_versions.add(contract_version)
+        assert instantiated_versions == {CONSTITUTIONAL_VERSION}
+
+        # Request DTOs must be frozen dataclasses (immutability guarantee).
+        from brain.engine.hypothesis_engine import HypothesisRequest
+        from brain.engine.problem_engine import ProblemRequest
+        from brain.engine.proposal_engine import ProposalRequest
+        from brain.engine.evaluation_engine import EvaluationRequest
+        from brain.engine.governance_engine import GovernanceRequest
+        from brain.engine.authorization_engine import AuthorizationRequest
+        from brain.engine.observation_engine import ObservationInput
+
+        for dto in (
+            HypothesisRequest, ProblemRequest, ProposalRequest,
+            EvaluationRequest, GovernanceRequest, AuthorizationRequest, ObservationInput,
+        ):
+            assert is_dataclass(dto), f"{dto.__name__} is not a dataclass"
+            assert dto.__dataclass_params__.frozen, f"{dto.__name__} is not frozen"
 
     def test_final_status(self):
-        """Final certification status."""
-        assert True, "HERMES_CONSTITUTIONAL_ARCHITECTURE_CERTIFIED"
+        """Behavioral final status: pipeline context is deterministic and version-pinned."""
+        from brain.engine.pipeline import PipelineOrchestrator
+        from brain.core.constants import CONSTITUTIONAL_VERSION
+
+        orchestrator = PipelineOrchestrator()
+        ctx1 = orchestrator._create_context()
+        ctx2 = orchestrator._create_context()
+
+        # Trace propagation: each context carries a unique execution id chained into trace_ids.
+        assert ctx1.execution_id in ctx1.trace_ids
+        assert ctx2.execution_id in ctx2.trace_ids
+        assert ctx1.trace_ids[-1] == ctx1.execution_id
+        assert ctx2.trace_ids[-1] == ctx2.execution_id
+
+        # Determinism of structure (not identity): shape matches across runs.
+        assert len(ctx1.trace_ids) == len(ctx2.trace_ids) == 1
+        assert ctx1.constitutional_version == CONSTITUTIONAL_VERSION
+        assert ctx2.constitutional_version == CONSTITUTIONAL_VERSION
+        assert ctx1.constitutional_version == orchestrator.constitutional_version
