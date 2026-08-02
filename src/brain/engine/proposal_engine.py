@@ -9,6 +9,7 @@ from typing import Tuple, Optional, Sequence
 from enum import Enum
 import uuid
 
+from brain.core.constants import CONSTITUTIONAL_VERSION
 from brain.domain.proposal import (
     ProposalCategory,
     ProposalState,
@@ -39,10 +40,10 @@ class ProposalEngine:
     - P-11: Proposal models are immutable domain objects.
     """
 
-    def __init__(self, policy=None, engine_id="proposal-engine", version="1.0.0"):
+    def __init__(self, policy=None, engine_id="proposal-engine", version=CONSTITUTIONAL_VERSION):
         self._policy = policy or self._default_policy()
         self._engine_id = engine_id
-        self._version = "1.0.0"
+        self._version = CONSTITUTIONAL_VERSION
 
     @property
     def engine_name(self) -> str:
@@ -50,7 +51,7 @@ class ProposalEngine:
 
     @property
     def contract_version(self) -> str:
-        return "1.0.0"
+        return CONSTITUTIONAL_VERSION
 
     def validate_input(self, request) -> tuple:
         if not request.problem_statement_id:

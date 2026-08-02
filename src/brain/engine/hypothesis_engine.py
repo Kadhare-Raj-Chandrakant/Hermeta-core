@@ -46,6 +46,12 @@ class HypothesisRequest:
     evidence: Tuple['ObservationEvidence', ...]
     policy: 'HypothesisPolicy' = None
 
+    def __post_init__(self):
+        # HIGH-1: normalize caller-provided collections to immutable tuples
+        object.__setattr__(self, 'observation_ids', tuple(self.observation_ids))
+        object.__setattr__(self, 'observations', tuple(self.observations))
+        object.__setattr__(self, 'evidence', tuple(self.evidence))
+
 
 class HypothesisEngine:
     """

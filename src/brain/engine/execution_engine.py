@@ -9,6 +9,8 @@ from typing import Tuple, Optional, Sequence, List, Dict, Any, Callable
 from enum import Enum
 import uuid
 
+from brain.core.constants import CONSTITUTIONAL_VERSION
+
 from brain.domain.execution import (
     ExecutionStatus,
     ArtifactType,
@@ -30,10 +32,10 @@ class ExecutionEngine:
     Constitutional Laws Enforced: X-1 through X-23.
     """
     
-    def __init__(self, policy=None, engine_id="execution-engine", version="1.0.0"):
+    def __init__(self, policy=None, engine_id="execution-engine", version=CONSTITUTIONAL_VERSION):
         self._policy = policy
         self._engine_id = "execution-engine"
-        self._version = "1.0.0"
+        self._version = CONSTITUTIONAL_VERSION
     
     @property
     def engine_name(self) -> str:
@@ -41,7 +43,7 @@ class ExecutionEngine:
     
     @property
     def contract_version(self) -> str:
-        return "1.0.0"
+        return CONSTITUTIONAL_VERSION
     
     def execute(self, context: 'ExecutionContext') -> 'ExecutionResult':
         """

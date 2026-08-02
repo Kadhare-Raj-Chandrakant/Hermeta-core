@@ -9,6 +9,7 @@ from typing import Tuple, Optional, Dict, List, Optional
 from enum import Enum
 import uuid
 
+from brain.core.constants import CONSTITUTIONAL_VERSION
 from brain.domain.governance import (
     DecisionState,
     DecisionMode,
@@ -29,10 +30,10 @@ class GovernanceEngine:
     Constitutional Laws Enforced: G-1 through G-23.
     """
     
-    def __init__(self, policy=None, engine_id="governance-engine", version="1.0.0"):
+    def __init__(self, policy=None, engine_id="governance-engine", version=CONSTITUTIONAL_VERSION):
         self._policy = policy
         self._engine_id = "governance-engine"
-        self._version = "1.0.0"
+        self._version = CONSTITUTIONAL_VERSION
     
     @property
     def engine_name(self) -> str:
@@ -40,7 +41,7 @@ class GovernanceEngine:
     
     @property
     def contract_version(self) -> str:
-        return "1.0.0"
+        return CONSTITUTIONAL_VERSION
     
     def adjudicate(self, request) -> 'GovernanceDecision':
         """Adjudicate an evaluation against constitutional policy."""
@@ -100,6 +101,11 @@ class GovernanceRequest:
     policy_ids: Tuple[UUID, ...] = field(default_factory=tuple)
     constitutional_version: str = "1.0"
     metadata: Tuple[Tuple[str, str], ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        # HIGH-1: normalize caller-provided collections to immutable tuples
+        object.__setattr__(self, 'policy_ids', tuple(self.policy_ids))
+        object.__setattr__(self, 'metadata', tuple(self.metadata))
 
 
 # Export

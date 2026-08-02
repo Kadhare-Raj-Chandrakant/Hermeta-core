@@ -26,7 +26,8 @@ from brain.engine.evaluation_engine import EvaluationEngine, EvaluationRequest, 
 from brain.engine.governance_engine import GovernanceEngine, GovernanceRequest, GovernanceDecision
 from brain.engine.authorization_engine import AuthorizationEngine, AuthorizationRequest, AuthorizationRecord, AuthorizationToken
 from brain.engine.execution_engine import ExecutionEngine, ExecutionResult, ExecutionReceipt, ExecutionContext
-from brain.engine.exceptions import EngineException
+from brain.engine.exceptions import EngineException, PipelineExecutionError
+from brain.core.constants import CONSTITUTIONAL_VERSION, CONSTITUTIONAL_SPEC_NAME
 
 
 @dataclass(frozen=True)
@@ -86,7 +87,7 @@ class PipelineOrchestrator:
         governance_engine: Optional[GovernanceEngine] = None,
         authorization_engine: Optional[AuthorizationEngine] = None,
         execution_engine: Optional[ExecutionEngine] = None,
-        constitutional_version: str = "1.0.0",
+        constitutional_version: str = CONSTITUTIONAL_VERSION,
     ):
         self._observation_engine = observation_engine or ObservationEngine()
         self._hypothesis_engine = hypothesis_engine or HypothesisEngine()
@@ -173,16 +174,32 @@ class PipelineOrchestrator:
         context = self._create_context()
         trace_ids = context.trace_ids
         
+        # Constitutional stage directory: maps stage labels to originating engine names
+        _stage_engine = {
+            "observation": self._observation_engine.engine_name,
+            "hypothesis": self._hypothesis_engine.engine_name,
+            "problem": self._problem_engine.engine_name,
+            "proposal": self._proposal_engine.engine_name,
+            "evaluation": self._evaluation_engine.engine_name,
+            "governance": self._governance_engine.engine_name,
+            "authorization": self._authorization_engine.engine_name,
+            "execution": self._execution_engine.engine_name,
+        }
+        _current_stage = "observation"
+        
         try:
             # Stage 1: Observation
+            _current_stage = "observation"
             observation = self._run_observation(raw_input, trace_ids)
             trace_ids += (self._extract_trace_id(observation),)
             
             # Stage 2: Hypothesis
+            _current_stage = "hypothesis"
             hypothesis_space = self._run_hypothesis(observation, trace_ids)
             trace_ids += (self._extract_trace_id(hypothesis_space),)
             
             # Stage 3: Problem
+            _current_stage = "problem"
             problem_space = self._run_problem(observation, hypothesis_space, trace_ids)
             # ProblemSpace only has IDs, create ProblemStatement inline for pipeline
             if problem_space.problem_ids:
@@ -200,23 +217,28 @@ class PipelineOrchestrator:
             trace_ids += (self._extract_trace_id(problem_statement),)
             
             # Stage 4: Proposal
+            _current_stage = "proposal"
             proposal_space = self._run_proposal(problem_statement, problem_space, trace_ids)
             trace_ids += (self._extract_trace_id(proposal_space),)
             
             # Stage 5: Evaluation
+            _current_stage = "evaluation"
             evaluation, evaluation_space = self._run_evaluation(proposal_space, problem_statement, trace_ids)
             trace_ids += (self._extract_trace_id(evaluation),)
             trace_ids += (self._extract_trace_id(evaluation_space),)
             
             # Stage 6: Governance
+            _current_stage = "governance"
             governance_decision = self._run_governance(evaluation, evaluation_space, trace_ids)
             trace_ids += (self._extract_trace_id(governance_decision),)
             
             # Stage 7: Authorization
+            _current_stage = "authorization"
             authorization_record, authorization_token = self._run_authorization(governance_decision, trace_ids)
             trace_ids += (self._extract_trace_id(authorization_record),)
             
             # Stage 8: Execution
+            _current_stage = "execution"
             execution_result, execution_receipt = self._run_execution(authorization_token, trace_ids)
             trace_ids += (self._extract_trace_id(execution_result),)
             
@@ -250,11 +272,19 @@ class PipelineOrchestrator:
                 completed_at=completed_at,
             )
         except Exception as e:
+            # Wrap with enriched context for diagnosis;
+            # message content is unchanged to preserve caller expectations.
+            wrapped = PipelineExecutionError(
+                f"Pipeline execution failed: {e}",
+                stage=_current_stage,
+                originating_engine=_stage_engine.get(_current_stage, ""),
+                original_exception=e,
+            )
             completed_at = datetime.now(timezone.utc)
             return PipelineResult(
                 execution_id=context.execution_id,
                 success=False,
-                error=f"Pipeline execution failed: {e}",
+                error=str(wrapped),
                 trace_ids=trace_ids,
                 completed_at=completed_at,
             )
@@ -403,7 +433,7 @@ def create_constitutional_pipeline(
     governance_engine: Optional[GovernanceEngine] = None,
     authorization_engine: Optional[AuthorizationEngine] = None,
     execution_engine: Optional[ExecutionEngine] = None,
-    constitutional_version: str = "1.0.0",
+    constitutional_version: str = CONSTITUTIONAL_VERSION,
 ) -> PipelineOrchestrator:
     """Create a constitutional pipeline with optional custom engines."""
     return PipelineOrchestrator(

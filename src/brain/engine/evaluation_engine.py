@@ -9,6 +9,7 @@ from typing import Tuple, Optional, Sequence, Dict
 from enum import Enum
 import uuid
 
+from brain.core.constants import CONSTITUTIONAL_VERSION
 from brain.domain.evaluation import (
     EvaluationDimension,
     EvidenceType,
@@ -28,10 +29,10 @@ class EvaluationEngine:
     Constitutional Laws Enforced: E-1 through E-16.
     """
     
-    def __init__(self, policy=None, engine_id="evaluation-engine", version="1.0.0"):
+    def __init__(self, policy=None, engine_id="evaluation-engine", version=CONSTITUTIONAL_VERSION):
         self._policy = policy
         self._engine_id = engine_id
-        self._version = "1.0.0"
+        self._version = CONSTITUTIONAL_VERSION
     
     @property
     def engine_name(self) -> str:
@@ -39,7 +40,7 @@ class EvaluationEngine:
     
     @property
     def contract_version(self) -> str:
-        return "1.0.0"
+        return CONSTITUTIONAL_VERSION
     
     def validate_input(self, request) -> tuple:
         if not request.proposal_id:
@@ -165,6 +166,11 @@ class EvaluationRequest:
     proposal_ids: Tuple[UUID, ...] = field(default_factory=tuple)
     policy: Optional[object] = None
     context: Tuple[str, ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        # HIGH-1: normalize caller-provided collections to immutable tuples
+        object.__setattr__(self, 'proposal_ids', tuple(self.proposal_ids))
+        object.__setattr__(self, 'context', tuple(self.context))
 
 
 # Export

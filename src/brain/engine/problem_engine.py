@@ -9,6 +9,7 @@ from typing import Tuple, Optional, Sequence
 from enum import Enum
 import uuid
 
+from brain.core.constants import CONSTITUTIONAL_VERSION
 from brain.domain.problem import (
     ProblemCategory,
     ProblemSeverity,
@@ -33,10 +34,10 @@ class ProblemEngine:
     - H-8: Every ProblemStatement preserves traceability back to its supporting observations through hypotheses.
     """
     
-    def __init__(self, policy=None, engine_id="problem-engine", version="1.0.0"):
+    def __init__(self, policy=None, engine_id="problem-engine", version=CONSTITUTIONAL_VERSION):
         self._policy = policy or ProblemPolicy()
         self._engine_id = engine_id
-        self._version = "1.0.0"
+        self._version = CONSTITUTIONAL_VERSION
     
     @property
     def engine_name(self) -> str:
@@ -44,7 +45,7 @@ class ProblemEngine:
     
     @property
     def contract_version(self) -> str:
-        return "1.0.0"
+        return CONSTITUTIONAL_VERSION
     
     def validate_input(self, request) -> tuple:
         """Validate input before processing."""
@@ -164,6 +165,10 @@ class ProblemRequest:
     context: Tuple[str, ...] = ()
 
     def __post_init__(self):
+        # HIGH-1: normalize caller-provided collections to immutable tuples
+        object.__setattr__(self, 'observations', tuple(self.observations))
+        object.__setattr__(self, 'hypotheses', tuple(self.hypotheses))
+        object.__setattr__(self, 'context', tuple(self.context))
         if not self.hypothesis_space_id:
             raise ValueError("hypothesis_space_id is required")
 

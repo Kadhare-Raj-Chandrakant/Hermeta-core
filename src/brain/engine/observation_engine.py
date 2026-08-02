@@ -17,6 +17,7 @@ from brain.domain.observation import (
     ObservationCategory,
     SignalCategory,
 )
+from brain.core.constants import CONSTITUTIONAL_VERSION
 from brain.engine.base import EngineContract, EngineContext, EngineMetadata
 from brain.engine.exceptions import (
     ObservationValidationError,
@@ -66,7 +67,7 @@ class ObservationEngine:
         self,
         policy: Optional[ObservationPolicy] = None,
         engine_id: str = "observation-engine",
-        version: str = "1.0.0",
+        version: str = CONSTITUTIONAL_VERSION,
     ):
         self._policy = policy or ObservationPolicy()
         self._engine_id = engine_id
@@ -82,8 +83,8 @@ class ObservationEngine:
     
     @property
     def contract_version(self) -> str:
-        return "1.0.0"
-    
+        return CONSTITUTIONAL_VERSION
+
     def validate_input(self, input_data: 'ObservationInput') -> tuple[bool, str]:
         """Validate input before processing."""
         if input_data.raw_input is None:

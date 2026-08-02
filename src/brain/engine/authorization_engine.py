@@ -9,6 +9,8 @@ from typing import Tuple, Optional, List
 from enum import Enum
 import uuid
 
+from brain.core.constants import CONSTITUTIONAL_VERSION
+
 from brain.domain.authorization import (
     AuthorizationState,
     ConstraintType,
@@ -28,10 +30,10 @@ class AuthorizationEngine:
     Constitutional Laws Enforced: A-1 through A-16.
     """
     
-    def __init__(self, policy=None, engine_id="authorization-engine", version="1.0.0"):
+    def __init__(self, policy=None, engine_id="authorization-engine", version=CONSTITUTIONAL_VERSION):
         self._policy = policy
         self._engine_id = "authorization-engine"
-        self._version = "1.0.0"
+        self._version = CONSTITUTIONAL_VERSION
     
     @property
     def engine_name(self) -> str:
@@ -39,7 +41,7 @@ class AuthorizationEngine:
     
     @property
     def contract_version(self) -> str:
-        return "1.0.0"
+        return CONSTITUTIONAL_VERSION
     
     def authorize(self, request) -> 'AuthorizationRecord':
         """Determine constitutional permission for a GovernanceDecision."""
@@ -102,6 +104,11 @@ class AuthorizationRequest:
     policy_ids: Tuple[UUID, ...] = field(default_factory=tuple)
     constitutional_version: str = ""
     metadata: Tuple[Tuple[str, str], ...] = field(default_factory=tuple)
+
+    def __post_init__(self):
+        # HIGH-1: normalize caller-provided collections to immutable tuples
+        object.__setattr__(self, 'policy_ids', tuple(self.policy_ids))
+        object.__setattr__(self, 'metadata', tuple(self.metadata))
 
 
 # Export
